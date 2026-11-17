@@ -21,7 +21,13 @@ const app = express();
 
 // Middlewares
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'cross-origin' }
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      'img-src': ["'self'", 'data:', 'https:'],
+    },
+  },
 }));
 app.use(cors({
   origin: '*', // Allow frontend development & testing
