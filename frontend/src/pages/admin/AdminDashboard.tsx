@@ -939,9 +939,43 @@ export const AdminDashboard: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-bold text-brand-brown mb-1">URL Hình ảnh bánh mì</label>
+                <label className="block font-bold text-brand-brown mb-1">Hình ảnh bánh mì</label>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-16 h-16 rounded-xl overflow-hidden border border-brand-brown/20 bg-brand-ivory/40 flex-shrink-0">
+                    {editingProduct.image_url ? (
+                      <img src={editingProduct.image_url} alt="Xem trước" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <ImageIcon className="w-5 h-5 text-brand-brown-light" />
+                      </div>
+                    )}
+                  </div>
+                  <label className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-dashed border-brand-brown/30 rounded-xl cursor-pointer hover:bg-brand-ivory transition-colors text-xs">
+                    <Upload className="w-4 h-4 text-brand-brown-light" />
+                    <span className="font-semibold text-brand-brown">Chọn ảnh từ thư viện / thư mục...</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          try {
+                            showToast('Đang tải ảnh lên...', 'info');
+                            const uploadedUrl = await api.uploadImage(file);
+                            setEditingProduct({ ...editingProduct, image_url: uploadedUrl });
+                            showToast('Tải ảnh thành công!', 'success');
+                          } catch (uErr: any) {
+                            showToast(uErr.message || 'Lỗi tải ảnh', 'error');
+                          }
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
                 <input
                   type="text"
+                  placeholder="...hoặc dán URL ảnh trực tiếp"
                   value={editingProduct.image_url || ''}
                   onChange={(e) => setEditingProduct({ ...editingProduct, image_url: e.target.value })}
                   className="w-full px-3 py-2 bg-brand-ivory/40 rounded-xl border border-brand-brown/20 font-mono text-[11px]"
