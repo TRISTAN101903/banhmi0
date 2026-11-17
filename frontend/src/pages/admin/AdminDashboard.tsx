@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   DollarSign, Package, Clock, AlertTriangle, Layers, Settings,
@@ -27,6 +27,7 @@ export const AdminDashboard: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState(true);
   const [orderFilter, setOrderFilter] = useState<string>('ALL');
+  const previousOrderStatusRef = useRef<Record<number, string>>({});
 
   // Modals
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -54,6 +55,7 @@ export const AdminDashboard: React.FC = () => {
 
       if (dashStats) setStats(dashStats);
       setOrders(ords);
+      previousOrderStatusRef.current = Object.fromEntries(ords.map((o: Order) => [o.id, o.status]));
       setProducts(prods);
       setCategories(cats);
       setIngredients(ings);
@@ -70,6 +72,27 @@ export const AdminDashboard: React.FC = () => {
 
   useEffect(() => {
     loadData();
+  }, []);
+
+  // Thông báo cho admin ngay khi shipper bấm "Đã giao" cho một đơn hàng.
+  // Chạy ngầm mỗi 20 giây, không làm gián đoạn các tab khác đang mở.
+  useEffect(() => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const freshOrders = await api.getOrders();
+        freshOrders.forEach((o: Order) => {
+          const prevStatus = previousOrderStatusRef.current[o.id];
+          if (prevStatus && prevStatus !== 'COMPLETED' && o.status === 'COMPLETED') {
+            showToast(`🎉 Shipper đã giao thành công đơn ${o.order_code}!`, 'success');
+          }
+        });
+        previousOrderStatusRef.current = Object.fromEntries(freshOrders.map((o: Order) => [o.id, o.status]));
+        setOrders(freshOrders);
+      } catch {
+        // Lỗi mạng tạm thời khi polling - bỏ qua êm, không làm phiền admin.
+      }
+    }, 20000);
+    return () => clearInterval(pollInterval);
   }, []);
 
   const formatVND = (amount: number) =>

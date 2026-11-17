@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Lock, Mail, ArrowRight, Shield, Truck, User } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, ArrowRight, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.js';
 
 export const LoginPage: React.FC = () => {
@@ -19,11 +19,6 @@ export const LoginPage: React.FC = () => {
     if (success) {
       navigate('/');
     }
-  };
-
-  const handleQuickLogin = (roleEmail: string, rolePass: string) => {
-    setEmail(roleEmail);
-    setPassword(rolePass);
   };
 
   return (
@@ -90,38 +85,6 @@ export const LoginPage: React.FC = () => {
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
-
-        {/* Evaluator Quick Credential Fillers */}
-        <div className="pt-4 border-t border-gray-100 space-y-2 text-xs">
-          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider text-center">
-            Tài khoản mẫu để kiểm thử:
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('admin@banhmi0.vn', 'BanhMi0@Admin2026!')}
-              className="p-2 bg-brand-cream/60 hover:bg-brand-red-light rounded-xl border border-brand-brown/15 text-left transition-colors flex items-center gap-2"
-            >
-              <Shield className="w-4 h-4 text-brand-red shrink-0" />
-              <div>
-                <p className="font-bold text-[11px] text-brand-brown">Quản Trị Viên</p>
-                <p className="text-[10px] text-gray-500">Admin</p>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('shipper@banhmi0.vn', 'Shipper@123')}
-              className="p-2 bg-brand-cream/60 hover:bg-brand-green-light rounded-xl border border-brand-brown/15 text-left transition-colors flex items-center gap-2"
-            >
-              <Truck className="w-4 h-4 text-brand-green shrink-0" />
-              <div>
-                <p className="font-bold text-[11px] text-brand-brown">Giao Hàng</p>
-                <p className="text-[10px] text-gray-500">Shipper</p>
-              </div>
-            </button>
-          </div>
-        </div>
 
         <div className="text-center pt-2 text-xs text-gray-500">
           Chưa có tài khoản?{' '}
