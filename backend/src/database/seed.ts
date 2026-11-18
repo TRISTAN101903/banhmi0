@@ -262,6 +262,7 @@ export const seedDatabase = async () => {
     { key: 'DELIVERY_FREE_THRESHOLD', value: '150000', description: 'Mức đơn miễn phí giao hàng (VNĐ)' },
     { key: 'STORE_LOGO_URL', value: '/logo_banhmi0.jpg', description: 'Ảnh đại diện/logo web và app' },
     { key: 'STORE_SHOWCASE_URL', value: '/store_showcase.jpg', description: 'Ảnh trưng bày cửa hàng BÁNH MÌ 0' },
+    { key: 'STORE_CONCEPT_IMAGE_URL', value: '/store_showcase.jpg', description: 'Ảnh mục Trưng Bày Tiệm & Bao Bì (Concept Store)' },
   ];
 
   const insertSettingStmt = db.prepare(`

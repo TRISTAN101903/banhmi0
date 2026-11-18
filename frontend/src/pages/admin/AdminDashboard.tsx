@@ -885,6 +885,75 @@ export const AdminDashboard: React.FC = () => {
               </div>
             </div>
 
+            {/* 3. Concept Store Image */}
+            <div className="p-6 rounded-2xl bg-brand-cream/40 border border-brand-brown/15 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-base text-brand-brown flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-brand-brown" />
+                    <span>3. Ảnh Trưng Bày Tiệm & Bao Bì (Concept Store)</span>
+                  </h4>
+                  <p className="text-xs text-gray-500">Ảnh riêng cho mục "Không Gian & Nhận Diện Thương Hiệu" ở trang chủ, tách biệt với ảnh Showcase ở trên</p>
+                </div>
+                <span className="text-xs font-bold text-brand-green bg-green-50 px-2.5 py-1 rounded-full border border-green-200">
+                  Đang hoạt động
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                <div className="md:col-span-5 p-2 bg-white rounded-2xl border border-brand-brown/10">
+                  <div className="aspect-[16/9] rounded-xl overflow-hidden border border-brand-brown/10">
+                    <img
+                      src={settings.STORE_CONCEPT_IMAGE_URL || '/store_showcase.jpg'}
+                      alt="Concept Store Preview"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <span className="text-[11px] font-bold text-brand-brown block text-center mt-1.5">
+                    Xem trước Ảnh Concept Store
+                  </span>
+                </div>
+
+                <div className="md:col-span-7 space-y-3 text-xs">
+                  <div>
+                    <label className="block font-bold text-brand-brown mb-1">Đường dẫn ảnh Concept Store (URL hoặc file hệ thống)</label>
+                    <input
+                      type="text"
+                      value={settings.STORE_CONCEPT_IMAGE_URL || '/store_showcase.jpg'}
+                      onChange={(e) => setSettings({ ...settings, STORE_CONCEPT_IMAGE_URL: e.target.value })}
+                      className="w-full px-3 py-2.5 bg-white rounded-xl border border-brand-brown/20 font-mono text-brand-brown"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-brand-brown mb-1">Hoặc tải lên ảnh Concept Store mới</label>
+                    <label className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-dashed border-brand-brown/30 rounded-xl cursor-pointer hover:bg-brand-ivory transition-colors">
+                      <Upload className="w-4 h-4 text-brand-brown-light" />
+                      <span className="font-semibold text-brand-brown">Chọn file ảnh Concept Store để tải lên...</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            try {
+                              showToast('Đang tải ảnh Concept Store lên...', 'info');
+                              const uploadedUrl = await api.uploadImage(file);
+                              setSettings({ ...settings, STORE_CONCEPT_IMAGE_URL: uploadedUrl });
+                              showToast('Tải ảnh Concept Store thành công!', 'success');
+                            } catch (uErr: any) {
+                              showToast(uErr.message || 'Lỗi tải ảnh', 'error');
+                            }
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Save Button */}
             <div className="flex justify-end pt-4 border-t border-brand-brown/10">
               <button

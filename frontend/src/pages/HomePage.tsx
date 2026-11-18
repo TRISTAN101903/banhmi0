@@ -7,7 +7,7 @@ import { ProductCard } from '../components/customer/ProductCard.js';
 import { useStoreSettings } from '../context/StoreSettingsContext.js';
 
 export const HomePage: React.FC = () => {
-  const { logoUrl, showcaseUrl } = useStoreSettings();
+  const { logoUrl, showcaseUrl, conceptImageUrl } = useStoreSettings();
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -195,7 +195,7 @@ export const HomePage: React.FC = () => {
 
           <div className="rounded-2xl overflow-hidden border border-brand-brown/15 shadow-warm-lg group relative">
             <img
-              src={showcaseUrl}
+              src={conceptImageUrl}
               alt="Trưng bày cửa hàng BÁNH MÌ 0"
               className="w-full h-[320px] sm:h-[480px] lg:h-[540px] object-cover transition-transform duration-700 group-hover:scale-102"
             />
