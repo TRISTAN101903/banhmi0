@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, Lock, Mail, User, Phone, MapPin, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.js';
 
@@ -13,6 +13,8 @@ export const RegisterPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo = (location.state as { from?: string } | null)?.from || '/';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +28,7 @@ export const RegisterPage: React.FC = () => {
     });
     setIsSubmitting(false);
     if (success) {
-      navigate('/');
+      navigate(redirectTo);
     }
   };
 
@@ -134,7 +136,7 @@ export const RegisterPage: React.FC = () => {
 
         <div className="text-center pt-2 text-xs text-gray-500">
           Đã có tài khoản?{' '}
-          <Link to="/login" className="font-bold text-brand-brown hover:underline">
+          <Link to="/login" state={{ from: redirectTo }} className="font-bold text-brand-brown hover:underline">
             Đăng nhập
           </Link>
         </div>

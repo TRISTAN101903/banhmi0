@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, Lock, Mail, ArrowRight, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.js';
 
@@ -10,6 +10,8 @@ export const LoginPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo = (location.state as { from?: string } | null)?.from || '/';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,7 +19,7 @@ export const LoginPage: React.FC = () => {
     const success = await login(email, password);
     setIsSubmitting(false);
     if (success) {
-      navigate('/');
+      navigate(redirectTo);
     }
   };
 
@@ -45,7 +47,7 @@ export const LoginPage: React.FC = () => {
             <input
               type="email"
               required
-              placeholder="admin@banhmi0.vn hoặc email của bạn"
+              placeholder="email@cuaban.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-2.5 bg-brand-ivory/40 rounded-xl border border-brand-brown/20 text-xs text-brand-brown font-medium focus:outline-none focus:border-brand-red focus:bg-white transition-all"
@@ -88,7 +90,7 @@ export const LoginPage: React.FC = () => {
 
         <div className="text-center pt-2 text-xs text-gray-500">
           Chưa có tài khoản?{' '}
-          <Link to="/register" className="font-bold text-brand-red hover:underline">
+          <Link to="/register" state={{ from: redirectTo }} className="font-bold text-brand-red hover:underline">
             Đăng ký ngay
           </Link>
         </div>

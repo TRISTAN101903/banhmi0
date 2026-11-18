@@ -188,23 +188,6 @@ export const Navbar: React.FC = () => {
                 <span>Tra Cứu Đơn Hàng</span>
               </Link>
 
-              <div className="flex gap-2 pt-2 border-t border-brand-brown/10">
-                <Link
-                  to="/admin"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex-1 py-2 text-center text-xs font-bold rounded-lg bg-brand-ivory border border-brand-brown/20 text-brand-brown"
-                >
-                  Admin Portal
-                </Link>
-                <Link
-                  to="/shipper"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex-1 py-2 text-center text-xs font-bold rounded-lg bg-brand-ivory border border-brand-brown/20 text-brand-brown"
-                >
-                  Shipper Portal
-                </Link>
-              </div>
-
               {!user && (
                 <Link
                   to="/login"

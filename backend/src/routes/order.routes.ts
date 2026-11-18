@@ -4,8 +4,8 @@ import { authenticate, optionalAuthenticate, requireRoles } from '../middlewares
 
 const router = Router();
 
-// Guest or logged-in user can place orders
-router.post('/', optionalAuthenticate, createOrder);
+// Phải đăng nhập mới được đặt hàng
+router.post('/', authenticate, createOrder);
 
 // Authenticated user gets orders list (filtered by role)
 router.get('/', authenticate, getOrders);

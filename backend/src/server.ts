@@ -30,7 +30,7 @@ app.use(helmet({
   },
 }));
 app.use(cors({
-  origin: '*', // Allow frontend development & testing
+  origin: ['https://banh-mi-0.onrender.com', 'http://localhost:5173', 'http://localhost:5000'],
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));

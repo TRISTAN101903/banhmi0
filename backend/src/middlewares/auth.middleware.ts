@@ -1,6 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
+import rateLimit from 'express-rate-limit';
 import { verifyToken, TokenPayload } from '../utils/auth.js';
 import { sendError } from '../utils/response.js';
+
+// Chặn dò mật khẩu: tối đa 10 lần thử đăng nhập/đăng ký mỗi 15 phút cho mỗi IP.
+export const loginRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    sendError(res, 'Quá nhiều lần thử đăng nhập. Vui lòng thử lại sau 15 phút.', 429);
+  },
+});
 
 export interface AuthRequest extends Request {
   user?: TokenPayload;
