@@ -4,8 +4,10 @@ import { ArrowRight, Flame, Sparkles, ShieldCheck, Clock, Award, ChevronRight } 
 import { api } from '../services/api.js';
 import { Product } from '../types/index.js';
 import { ProductCard } from '../components/customer/ProductCard.js';
+import { useStoreSettings } from '../context/StoreSettingsContext.js';
 
 export const HomePage: React.FC = () => {
+  const { logoUrl, showcaseUrl } = useStoreSettings();
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -82,7 +84,7 @@ export const HomePage: React.FC = () => {
 
                 <div className="bg-white p-3 sm:p-4 rounded-3xl shadow-warm-lg border border-brand-brown/10 overflow-hidden transform lg:rotate-1 hover:rotate-0 transition-transform duration-500">
                   <img
-                    src="/store_showcase.jpg"
+                    src={showcaseUrl}
                     alt="Không Gian Trưng Bày BÁNH MÌ 0"
                     className="w-full h-80 sm:h-96 object-cover rounded-2xl"
                   />
@@ -103,7 +105,7 @@ export const HomePage: React.FC = () => {
                 {/* Floating badge */}
                 <div className="absolute -bottom-6 -left-6 sm:left-4 bg-brand-brown text-brand-cream p-2 pr-5 rounded-2xl shadow-warm border border-brand-brown-light/40 flex items-center gap-3">
                   <div className="w-12 h-12 rounded-xl overflow-hidden bg-white shrink-0 border border-brand-brown">
-                    <img src="/logo_banhmi0.jpg" alt="Logo" className="w-full h-full object-cover" />
+                    <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
                   </div>
                   <div>
                     <p className="text-xs font-bold">Nóng giòn trao tay</p>
@@ -193,7 +195,7 @@ export const HomePage: React.FC = () => {
 
           <div className="rounded-2xl overflow-hidden border border-brand-brown/15 shadow-warm-lg group relative">
             <img
-              src="/store_showcase.jpg"
+              src={showcaseUrl}
               alt="Trưng bày cửa hàng BÁNH MÌ 0"
               className="w-full h-[320px] sm:h-[480px] lg:h-[540px] object-cover transition-transform duration-700 group-hover:scale-102"
             />

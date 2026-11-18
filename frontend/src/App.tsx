@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastProvider } from './context/ToastContext.js';
 import { AuthProvider } from './context/AuthContext.js';
 import { CartProvider } from './context/CartContext.js';
+import { StoreSettingsProvider } from './context/StoreSettingsContext.js';
 
 // Layout & Common Components
 import { Navbar } from './components/layout/Navbar.js';
@@ -34,6 +35,7 @@ export const App: React.FC = () => {
   };
 
   return (
+    <StoreSettingsProvider>
     <ToastProvider>
       <AuthProvider>
         <CartProvider>
@@ -66,5 +68,6 @@ export const App: React.FC = () => {
         </CartProvider>
       </AuthProvider>
     </ToastProvider>
+    </StoreSettingsProvider>
   );
 };

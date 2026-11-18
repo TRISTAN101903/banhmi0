@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Phone, MapPin, Clock, Heart, ShieldCheck } from 'lucide-react';
+import { useStoreSettings } from '../../context/StoreSettingsContext.js';
 
 export const Footer: React.FC = () => {
+  const { logoUrl } = useStoreSettings();
   return (
     <footer className="bg-brand-brown text-brand-cream border-t border-brand-brown-dark/30 pt-16 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -12,7 +14,7 @@ export const Footer: React.FC = () => {
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-full overflow-hidden border border-brand-brown bg-white flex items-center justify-center shrink-0">
                 <img
-                  src="/logo_banhmi0.jpg"
+                  src={logoUrl}
                   alt="Logo BÁNH MÌ 0"
                   className="w-full h-full object-cover"
                 />

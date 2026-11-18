@@ -3,11 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingBag, User as UserIcon, Menu, X, Shield, Truck, LogOut, Compass } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.js';
 import { useCart } from '../../context/CartContext.js';
+import { useStoreSettings } from '../../context/StoreSettingsContext.js';
 
 export const Navbar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { user, logout, isAdmin, isShipper } = useAuth();
+  const { logoUrl } = useStoreSettings();
   const { totalItems, setIsCartOpen } = useCart();
   const navigate = useNavigate();
 
@@ -27,7 +29,7 @@ export const Navbar: React.FC = () => {
           <Link to="/" className="flex items-center gap-3 group">
             <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-brand-brown flex items-center justify-center shadow-warm transition-transform group-hover:scale-105 bg-white shrink-0">
               <img
-                src="/logo_banhmi0.jpg"
+                src={logoUrl}
                 alt="Logo BÁNH MÌ 0"
                 className="w-full h-full object-cover"
               />

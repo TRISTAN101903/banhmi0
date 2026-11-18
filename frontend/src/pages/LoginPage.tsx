@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, Lock, Mail, ArrowRight, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.js';
+import { useStoreSettings } from '../context/StoreSettingsContext.js';
 
 export const LoginPage: React.FC = () => {
+  const { logoUrl } = useStoreSettings();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -28,7 +30,7 @@ export const LoginPage: React.FC = () => {
       <div className="text-center space-y-2">
         <div className="w-18 h-18 rounded-full overflow-hidden border-2 border-brand-brown mx-auto flex items-center justify-center shadow-warm bg-white">
           <img
-            src="/logo_banhmi0.jpg"
+            src={logoUrl}
             alt="Logo BÁNH MÌ 0"
             className="w-full h-full object-cover"
           />

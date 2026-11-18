@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import { useStoreSettings } from '../../context/StoreSettingsContext.js';
 
 interface IntroSplashProps {
   onComplete: () => void;
@@ -7,6 +8,7 @@ interface IntroSplashProps {
 
 export const IntroSplash: React.FC<IntroSplashProps> = ({ onComplete }) => {
   const [isFadingOut, setIsFadingOut] = useState(false);
+  const { logoUrl } = useStoreSettings();
 
   useEffect(() => {
     // Automatically transition smoothly after 3 seconds
@@ -38,7 +40,7 @@ export const IntroSplash: React.FC<IntroSplashProps> = ({ onComplete }) => {
         <div className="relative mb-6">
           <div className="w-36 h-36 sm:w-44 sm:h-44 rounded-full overflow-hidden bg-white border-4 border-brand-brown shadow-warm-lg flex items-center justify-center animate-pulse-glow">
             <img
-              src="/logo_banhmi0.jpg"
+              src={logoUrl}
               alt="Logo BÁNH MÌ 0"
               className="w-full h-full object-cover"
             />
