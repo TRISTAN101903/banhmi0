@@ -15,11 +15,19 @@ export const Navbar: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-40 bg-brand-cream/95 backdrop-blur-md border-b border-brand-brown/10 shadow-sm transition-all">
+      {/* Top Banner */}
+      <div className="bg-brand-brown text-brand-cream text-xs py-1.5 px-4 text-center font-medium tracking-wide flex items-center justify-center gap-2">
+        <span className="inline-block w-2 h-2 rounded-full bg-brand-green animate-pulse"></span>
+        <span>TRÒN VỊ MỖI NGÀY – NÓNG GIÒN TỪNG Ổ</span>
+        <span className="hidden md:inline opacity-60">|</span>
+        <span className="hidden md:inline opacity-80 text-[11px]">DESIGN BY TRISTAN.TEAMA4</span>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-20">
           {/* Brand Logo */}
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-brand-brown flex items-center justify-center shadow-warm transition-transform bg-white shrink-0">
+            <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-brand-brown flex items-center justify-center shadow-warm transition-transform group-hover:scale-105 bg-white shrink-0">
               <img
                 src={logoUrl}
                 alt="Logo BÁNH MÌ 0"
@@ -28,9 +36,10 @@ export const Navbar: React.FC = () => {
             </div>
             <div>
               <div className="flex items-baseline gap-1.5">
-                <span className="text-xl font-extrabold tracking-tight text-brand-brown font-sans">BÁNH MÌ</span>
-                <span className="text-xl font-extrabold text-brand-red">0</span>
+                <span className="text-2xl font-black tracking-tight text-brand-brown font-sans">BÁNH MÌ</span>
+                <span className="text-2xl font-black text-brand-red">0</span>
               </div>
+              <p className="text-[10px] text-brand-brown-light font-medium tracking-widest uppercase">Tròn Vị Mỗi Ngày</p>
             </div>
           </Link>
 
@@ -53,12 +62,12 @@ export const Navbar: React.FC = () => {
             {/* Cart Button */}
             <button
               onClick={() => setIsCartOpen(true)}
-              className="relative p-2.5 rounded-full bg-brand-ivory hover:bg-brand-cream-dark text-brand-brown border border-brand-brown/20 transition-all shadow-sm"
+              className="relative p-2.5 rounded-full bg-brand-ivory hover:bg-brand-cream-dark text-brand-brown border border-brand-brown/20 transition-all shadow-sm hover:scale-105"
               aria-label="Giỏ hàng"
             >
               <ShoppingBag className="w-5 h-5 text-brand-brown" />
               {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 bg-brand-red text-white text-[11px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-brand-red text-white text-[11px] font-bold w-5 h-5 rounded-full flex items-center justify-center animate-pulse">
                   {totalItems}
                 </span>
               )}
