@@ -48,9 +48,9 @@ const uploadsPath = config.uploadsDir;
 if (!fs.existsSync(uploadsPath)) {
   fs.mkdirSync(uploadsPath, { recursive: true });
 }
-app.use('/uploads', express.static(uploadsPath));
+app.use('/uploads', express.static(uploadsPath, { maxAge: '7d' }));
 // Ảnh thương hiệu đi kèm mã nguồn (khi DATA_DIR trỏ sang ổ đĩa riêng)
-app.use('/uploads', express.static(path.resolve(config.workspaceRoot, 'uploads')));
+app.use('/uploads', express.static(path.resolve(config.workspaceRoot, 'uploads'), { maxAge: '7d' }));
 
 // Serve the built frontend (enables single-service deploy: Render/Railway/VPS
 // serve both API and static site from one process). Skipped in local dev
@@ -59,7 +59,13 @@ app.use('/uploads', express.static(path.resolve(config.workspaceRoot, 'uploads')
 const frontendDistPath = path.resolve(config.workspaceRoot, 'frontend/dist');
 const hasFrontendBuild = fs.existsSync(frontendDistPath);
 if (hasFrontendBuild) {
-  app.use(express.static(frontendDistPath));
+  app.use('/assets', express.static(path.join(frontendDistPath, 'assets'), { maxAge: '365d', immutable: true }));
+  app.use(express.static(frontendDistPath, {
+    maxAge: '1h',
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('index.html')) res.setHeader('Cache-Control', 'no-cache');
+    },
+  }));
 }
 
 // API Routes

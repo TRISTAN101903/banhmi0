@@ -33,16 +33,10 @@ export const MenuPage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
       {/* Header */}
-      <div className="text-center max-w-2xl mx-auto space-y-3">
-        <span className="text-xs font-bold text-brand-red uppercase tracking-widest flex items-center justify-center gap-1.5">
-          <Flame className="w-4 h-4 fill-brand-red" />
-          <span>Thực Đơn BÁNH MÌ 0</span>
-        </span>
-        <h1 className="text-3xl sm:text-4xl font-black text-brand-brown font-sans">
-          Bánh Mì Nóng Giòn Chuẩn Vị Việt
-        </h1>
-        <p className="text-sm text-brand-brown/70">
-          Tất cả các ổ bánh mì đều được nướng nóng giòn theo yêu cầu và đóng gói trong bao bì giấy kraft cao cấp.
+      <div className="max-w-2xl space-y-2">
+        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-brand-brown">Thực đơn</h1>
+        <p className="text-brand-brown/75">
+          Chọn món, thêm ghi chú nếu cần rồi đặt hàng. Bánh được nướng lại trước khi đóng gói.
         </p>
       </div>
 

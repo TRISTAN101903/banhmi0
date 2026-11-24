@@ -9,33 +9,36 @@ interface StoreSettingsContextType {
   logoUrl: string;
   showcaseUrl: string;
   conceptImageUrl: string;
+  settings: Record<string, string>;
 }
 
 const StoreSettingsContext = createContext<StoreSettingsContextType>({
   logoUrl: DEFAULT_LOGO,
   showcaseUrl: DEFAULT_SHOWCASE,
   conceptImageUrl: DEFAULT_CONCEPT_IMAGE,
+  settings: {},
 });
 
 export const StoreSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [logoUrl, setLogoUrl] = useState(DEFAULT_LOGO);
-  const [showcaseUrl, setShowcaseUrl] = useState(DEFAULT_SHOWCASE);
-  const [conceptImageUrl, setConceptImageUrl] = useState(DEFAULT_CONCEPT_IMAGE);
+  const [settings, setSettings] = useState<Record<string, string>>({});
 
   useEffect(() => {
     api.getSettings()
-      .then((settings) => {
-        if (settings.STORE_LOGO_URL) setLogoUrl(settings.STORE_LOGO_URL);
-        if (settings.STORE_SHOWCASE_URL) setShowcaseUrl(settings.STORE_SHOWCASE_URL);
-        if (settings.STORE_CONCEPT_IMAGE_URL) setConceptImageUrl(settings.STORE_CONCEPT_IMAGE_URL);
-      })
+      .then((s) => setSettings(s || {}))
       .catch(() => {
-        // Giữ ảnh mặc định nếu không tải được cài đặt (lỗi mạng tạm thời).
+        // Giữ giá trị mặc định nếu không tải được cài đặt (lỗi mạng tạm thời).
       });
   }, []);
 
   return (
-    <StoreSettingsContext.Provider value={{ logoUrl, showcaseUrl, conceptImageUrl }}>
+    <StoreSettingsContext.Provider
+      value={{
+        logoUrl: settings.STORE_LOGO_URL || DEFAULT_LOGO,
+        showcaseUrl: settings.STORE_SHOWCASE_URL || DEFAULT_SHOWCASE,
+        conceptImageUrl: settings.STORE_CONCEPT_IMAGE_URL || DEFAULT_CONCEPT_IMAGE,
+        settings,
+      }}
+    >
       {children}
     </StoreSettingsContext.Provider>
   );
