@@ -61,6 +61,17 @@ export const seedDatabase = async () => {
     }
   }
 
+  // Khóa tài khoản admin mặc định cũ (mật khẩu đã từng công khai) khi đã chuyển sang email admin riêng
+  const LEGACY_ADMIN = 'admin@banhmi0.vn';
+  if (config.adminBootstrap.email !== LEGACY_ADMIN) {
+    const legacy = db.prepare('SELECT id, password_hash FROM users WHERE email = ?').get(LEGACY_ADMIN) as any;
+    if (legacy && (await bcrypt.compare('BanhMi0@Admin2026!', legacy.password_hash))) {
+      db.prepare('UPDATE users SET password_hash = ? WHERE id = ?')
+        .run(await bcrypt.hash(crypto.randomBytes(24).toString('base64url'), 10), legacy.id);
+      console.log('[SEED] Đã khóa tài khoản admin mặc định cũ admin@banhmi0.vn.');
+    }
+  }
+
   // 3. Demo Shipper & Staff
   if (config.seedDemoAccounts) {
     const shipperExists = db.prepare('SELECT id FROM users WHERE email = ?').get('shipper@banhmi0.vn');

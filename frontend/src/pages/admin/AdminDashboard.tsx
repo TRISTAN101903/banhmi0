@@ -15,7 +15,7 @@ export const AdminDashboard: React.FC = () => {
   const { showToast } = useToast();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState<'orders' | 'products' | 'inventory' | 'settings' | 'branding'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'products' | 'inventory' | 'settings' | 'branding' | 'shippers'>('orders');
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -37,6 +37,36 @@ export const AdminDashboard: React.FC = () => {
   const [adjustType, setAdjustType] = useState<'IN' | 'OUT' | 'ADJUST'>('IN');
   const [adjustQty, setAdjustQty] = useState('');
   const [adjustReason, setAdjustReason] = useState('');
+
+  // Quản lý tài khoản Shipper (chỉ Admin)
+  const [newShipper, setNewShipper] = useState({ full_name: '', email: '', phone: '', password: '' });
+  const [isCreatingShipper, setIsCreatingShipper] = useState(false);
+
+  const handleCreateShipper = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsCreatingShipper(true);
+    try {
+      await api.createShipper(newShipper);
+      showToast('Đã tạo tài khoản Shipper!', 'success');
+      setNewShipper({ full_name: '', email: '', phone: '', password: '' });
+      setStaffList(await api.getStaffList());
+    } catch (err: any) {
+      showToast(err.message || 'Lỗi tạo tài khoản shipper', 'error');
+    } finally {
+      setIsCreatingShipper(false);
+    }
+  };
+
+  const handleResetShipperPassword = async (id: number, name: string) => {
+    const pw = window.prompt(`Nhập mật khẩu mới cho ${name} (8-72 ký tự):`);
+    if (!pw) return;
+    try {
+      await api.resetShipperPassword(id, pw);
+      showToast('Đã đặt lại mật khẩu Shipper!', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Lỗi đặt lại mật khẩu', 'error');
+    }
+  };
 
   // Load dashboard data
   const loadData = async () => {
@@ -330,6 +360,20 @@ export const AdminDashboard: React.FC = () => {
           <Camera className="w-4 h-4 text-brand-red" />
           <span>Ảnh Đại Diện Web / App & Trưng Bày</span>
         </button>
+
+        {isAdmin && (
+          <button
+            onClick={() => setActiveTab('shippers')}
+            className={`px-5 py-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-all whitespace-nowrap ${
+              activeTab === 'shippers'
+                ? 'border-brand-red text-brand-red'
+                : 'border-transparent text-brand-brown hover:text-brand-red'
+            }`}
+          >
+            <Truck className="w-4 h-4" />
+            <span>Tài Khoản Shipper</span>
+          </button>
+        )}
       </div>
 
       {/* TAB CONTENT: ORDERS */}
@@ -639,6 +683,68 @@ export const AdminDashboard: React.FC = () => {
                     <span className="font-mono text-gray-500">{m.previous_stock} → {m.new_stock}</span>
                     <span className="block text-[10px] text-gray-400">{new Date(m.created_at).toLocaleString('vi-VN')}</span>
                   </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB CONTENT: SHIPPERS (chỉ Admin) */}
+      {activeTab === 'shippers' && isAdmin && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <form onSubmit={handleCreateShipper} className="bg-white rounded-3xl border border-brand-brown/10 shadow-warm p-8 space-y-4">
+            <div>
+              <h3 className="font-bold text-lg text-brand-brown">Tạo Tài Khoản Shipper</h3>
+              <p className="text-xs text-gray-500">Chỉ Admin tạo được. Shipper không thể tự đăng ký trên web.</p>
+            </div>
+            {[
+              { key: 'full_name', label: 'Họ tên', type: 'text', required: true },
+              { key: 'email', label: 'Email đăng nhập', type: 'email', required: true },
+              { key: 'phone', label: 'Số điện thoại', type: 'tel', required: false },
+              { key: 'password', label: 'Mật khẩu (tối thiểu 8 ký tự)', type: 'password', required: true },
+            ].map((f) => (
+              <div key={f.key}>
+                <label className="block text-xs font-bold text-brand-brown mb-1">{f.label}</label>
+                <input
+                  type={f.type}
+                  required={f.required}
+                  minLength={f.key === 'password' ? 8 : undefined}
+                  autoComplete={f.key === 'password' ? 'new-password' : 'off'}
+                  value={(newShipper as any)[f.key]}
+                  onChange={(e) => setNewShipper({ ...newShipper, [f.key]: e.target.value })}
+                  className="w-full px-4 py-2 bg-brand-ivory/40 rounded-xl border border-brand-brown/20 text-xs font-medium text-brand-brown"
+                />
+              </div>
+            ))}
+            <button
+              type="submit"
+              disabled={isCreatingShipper}
+              className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-brand-red hover:bg-brand-red-dark text-white text-xs font-bold disabled:opacity-60"
+            >
+              <Plus className="w-4 h-4" />
+              <span>{isCreatingShipper ? 'Đang tạo...' : 'Tạo Tài Khoản Shipper'}</span>
+            </button>
+          </form>
+
+          <div className="bg-white rounded-3xl border border-brand-brown/10 shadow-warm p-8 space-y-4">
+            <h3 className="font-bold text-lg text-brand-brown">Danh Sách Shipper</h3>
+            <div className="divide-y divide-brand-brown/10">
+              {staffList.filter((s) => s.role === 'SHIPPER').length === 0 && (
+                <p className="text-xs text-gray-500 py-3">Chưa có shipper nào.</p>
+              )}
+              {staffList.filter((s) => s.role === 'SHIPPER').map((s) => (
+                <div key={s.id} className="py-3 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-brand-brown truncate">{s.full_name}</p>
+                    <p className="text-[11px] text-gray-500 truncate">{s.email}{s.phone ? ` · ${s.phone}` : ''}</p>
+                  </div>
+                  <button
+                    onClick={() => handleResetShipperPassword(s.id, s.full_name)}
+                    className="shrink-0 px-3 py-1.5 rounded-full border border-brand-brown/20 text-[11px] font-bold text-brand-brown hover:border-brand-red hover:text-brand-red"
+                  >
+                    Đặt lại mật khẩu
+                  </button>
                 </div>
               ))}
             </div>

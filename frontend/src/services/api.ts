@@ -345,5 +345,26 @@ export const api = {
     const res = await fetch(`${API_BASE}/auth/staff`, { headers: getHeaders() });
     const data = await res.json();
     return data.data || [];
+  },
+
+  async createShipper(payload: { email: string; password: string; full_name: string; phone?: string }): Promise<any> {
+    const res = await fetch(`${API_BASE}/auth/staff`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Không thể tạo tài khoản shipper');
+    return data.data;
+  },
+
+  async resetShipperPassword(id: number, password: string): Promise<void> {
+    const res = await fetch(`${API_BASE}/auth/staff/${id}/password`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify({ password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Không thể đặt lại mật khẩu');
   }
 };
