@@ -181,8 +181,19 @@ export const ShipperPortal: React.FC = () => {
                 </div>
 
                 <div className="text-left sm:text-right">
-                  <span className="text-xs text-gray-400">Thu tiền COD:</span>
-                  <p className="text-xl font-black text-brand-brown">{formatVND(task.total_amount)}</p>
+                  {task.payment_status === 'PAID' ? (
+                    <>
+                      <span className="text-xs text-green-700 font-bold">Đã thanh toán, không thu tiền</span>
+                      <p className="text-xl font-black text-gray-400 line-through">{formatVND(task.total_amount)}</p>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-xs text-gray-400">
+                        {task.payment_method === 'BANK_TRANSFER' ? 'Chuyển khoản chưa xác nhận, thu tiền:' : 'Thu tiền COD:'}
+                      </span>
+                      <p className="text-xl font-black text-brand-brown">{formatVND(task.total_amount)}</p>
+                    </>
+                  )}
                 </div>
               </div>
 

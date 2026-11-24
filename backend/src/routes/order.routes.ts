@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createOrder, getOrders, getOrderDetail, updateOrderStatus } from '../controllers/order.controller.js';
+import { createOrder, getOrders, getOrderDetail, updateOrderStatus, updatePaymentStatus } from '../controllers/order.controller.js';
 import { authenticate, requireRoles } from '../middlewares/auth.middleware.js';
 
 const router = Router();
@@ -15,5 +15,8 @@ router.get('/:identifier', authenticate, getOrderDetail);
 
 // Updating order status (Admin, Staff, or Shipper)
 router.patch('/:id/status', authenticate, requireRoles('ADMIN', 'STAFF', 'SHIPPER'), updateOrderStatus);
+
+// Xác nhận thanh toán (Admin, Staff)
+router.patch('/:id/payment', authenticate, requireRoles('ADMIN', 'STAFF'), updatePaymentStatus);
 
 export default router;

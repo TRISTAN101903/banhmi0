@@ -6,6 +6,7 @@ import { useCart } from '../context/CartContext.js';
 import { useAuth } from '../context/AuthContext.js';
 import { useToast } from '../context/ToastContext.js';
 import { api } from '../services/api.js';
+import { useStoreSettings } from '../context/StoreSettingsContext.js';
 
 export const CheckoutPage: React.FC = () => {
   const { items, subtotal, clearCart } = useCart();
@@ -18,6 +19,9 @@ export const CheckoutPage: React.FC = () => {
   const [deliveryAddress, setDeliveryAddress] = useState(user?.address || '');
   const [fulfillmentType, setFulfillmentType] = useState<'DELIVERY' | 'PICKUP'>('DELIVERY');
   const [notes, setNotes] = useState('');
+  const { settings } = useStoreSettings();
+  const hasQr = Boolean(settings.PAYMENT_QR_URL);
+  const [paymentMethod, setPaymentMethod] = useState<'COD' | 'BANK_TRANSFER'>('COD');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const formatVND = (amount: number) =>
@@ -92,6 +96,7 @@ export const CheckoutPage: React.FC = () => {
         delivery_address: fulfillmentType === 'DELIVERY' ? deliveryAddress : undefined,
         fulfillment_type: fulfillmentType,
         notes: notes.trim() || undefined,
+        payment_method: hasQr ? paymentMethod : 'COD',
         items: items.map((it) => ({
           product_id: it.product.id,
           quantity: it.quantity,
@@ -292,15 +297,25 @@ export const CheckoutPage: React.FC = () => {
             </div>
 
             {/* Payment method */}
-            <div className="p-3 bg-brand-cream/60 rounded-xl border border-brand-brown/10 text-xs space-y-1">
-              <div className="flex items-center gap-2 font-bold text-brand-brown">
-                <CheckCircle2 className="w-4 h-4 text-brand-green" />
-                <span>Phương thức: Thanh toán khi nhận (COD)</span>
-              </div>
-              <p className="text-[11px] text-gray-500 pl-6">
-                Bạn chỉ thanh toán khi nhận được ổ bánh mì nóng giòn tận tay.
-              </p>
-            </div>
+            <fieldset className="space-y-2">
+              <legend className="text-xs font-bold text-brand-brown mb-1">Hình thức thanh toán</legend>
+              <label className={`flex items-start gap-3 p-3 rounded-xl border text-xs cursor-pointer ${paymentMethod === 'COD' || !hasQr ? 'border-brand-red bg-brand-red-light/40' : 'border-brand-brown/15 bg-white'}`}>
+                <input type="radio" name="payment" className="mt-0.5" checked={paymentMethod === 'COD' || !hasQr} onChange={() => setPaymentMethod('COD')} />
+                <span>
+                  <strong className="block text-brand-brown">Tiền mặt khi nhận hàng</strong>
+                  <span className="text-gray-500">Thanh toán khi nhận được bánh.</span>
+                </span>
+              </label>
+              {hasQr && (
+                <label className={`flex items-start gap-3 p-3 rounded-xl border text-xs cursor-pointer ${paymentMethod === 'BANK_TRANSFER' ? 'border-brand-red bg-brand-red-light/40' : 'border-brand-brown/15 bg-white'}`}>
+                  <input type="radio" name="payment" className="mt-0.5" checked={paymentMethod === 'BANK_TRANSFER'} onChange={() => setPaymentMethod('BANK_TRANSFER')} />
+                  <span>
+                    <strong className="block text-brand-brown">Chuyển khoản qua mã QR</strong>
+                    <span className="text-gray-500">Sau khi đặt hàng, bạn sẽ thấy mã QR kèm số tiền và nội dung chuyển khoản.</span>
+                  </span>
+                </label>
+              )}
+            </fieldset>
 
             {/* Submit button */}
             <button

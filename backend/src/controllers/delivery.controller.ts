@@ -63,7 +63,7 @@ export const getShipperTasks = (req: AuthRequest, res: Response) => {
     const tasks = db.prepare(`
       SELECT da.*,
              o.order_code, o.customer_name, o.customer_phone, o.delivery_address,
-             o.total_amount, o.notes, o.status as order_status, o.created_at as order_created_at
+             o.total_amount, o.payment_method, o.payment_status, o.notes, o.status as order_status, o.created_at as order_created_at
       FROM delivery_assignments da
       JOIN orders o ON da.order_id = o.id
       WHERE da.shipper_id = ?

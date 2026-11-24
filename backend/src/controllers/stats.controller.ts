@@ -73,9 +73,10 @@ const ALLOWED_SETTINGS = [
   'STORE_NAME', 'STORE_SLOGAN', 'DESIGN_SIGNATURE', 'STORE_PHONE', 'STORE_ADDRESS', 'STORE_HOURS',
   'DELIVERY_BASE_FEE', 'DELIVERY_FREE_THRESHOLD',
   'STORE_LOGO_URL', 'STORE_SHOWCASE_URL', 'STORE_CONCEPT_IMAGE_URL',
+  'PAYMENT_QR_URL', 'PAYMENT_BANK_NAME', 'PAYMENT_ACCOUNT_NO', 'PAYMENT_ACCOUNT_NAME',
 ];
 const NUMERIC_SETTINGS = ['DELIVERY_BASE_FEE', 'DELIVERY_FREE_THRESHOLD'];
-const URL_SETTINGS = ['STORE_LOGO_URL', 'STORE_SHOWCASE_URL', 'STORE_CONCEPT_IMAGE_URL'];
+const URL_SETTINGS = ['STORE_LOGO_URL', 'STORE_SHOWCASE_URL', 'STORE_CONCEPT_IMAGE_URL', 'PAYMENT_QR_URL'];
 
 export const updateSettings = (req: AuthRequest, res: Response) => {
   try {
@@ -97,7 +98,7 @@ export const updateSettings = (req: AuthRequest, res: Response) => {
         return sendError(res, `${key} phải là số không âm.`, 400);
       }
       // Chỉ nhận đường dẫn nội bộ hoặc https, chặn javascript:/data: URL
-      if (URL_SETTINGS.includes(key) && !(str.startsWith('/') && !str.startsWith('//')) && !/^https:\/\//i.test(str)) {
+      if (URL_SETTINGS.includes(key) && str !== '' && !(str.startsWith('/') && !str.startsWith('//')) && !/^https:\/\//i.test(str)) {
         return sendError(res, `${key} phải là đường dẫn nội bộ hoặc https.`, 400);
       }
     }

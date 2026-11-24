@@ -68,6 +68,18 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  // Xác nhận đã nhận tiền cho một đơn
+  const handleConfirmPaid = async (orderId: number, code: string) => {
+    if (!window.confirm(`Xác nhận đã nhận đủ tiền cho đơn ${code}?`)) return;
+    try {
+      await api.updatePaymentStatus(orderId, 'PAID');
+      showToast('Đã xác nhận thanh toán!', 'success');
+      setOrders(await api.getOrders());
+    } catch (err: any) {
+      showToast(err.message || 'Lỗi cập nhật thanh toán', 'error');
+    }
+  };
+
   // Load dashboard data
   const loadData = async () => {
     setIsLoading(true);
@@ -405,6 +417,7 @@ export const AdminDashboard: React.FC = () => {
                     <th className="p-4">Khách Hàng</th>
                     <th className="p-4">Hình Thức</th>
                     <th className="p-4">Tổng Tiền</th>
+                    <th className="p-4">Thanh Toán</th>
                     <th className="p-4">Trừ Kho?</th>
                     <th className="p-4">Shipper</th>
                     <th className="p-4">Trạng Thái</th>
@@ -442,6 +455,24 @@ export const AdminDashboard: React.FC = () => {
                         </td>
                         <td className="p-4 font-bold text-brand-brown">
                           {formatVND(ord.total_amount)}
+                        </td>
+                        <td className="p-4">
+                          <span className="block text-[10px] font-semibold text-brand-brown mb-1">
+                            {ord.payment_method === 'BANK_TRANSFER' ? 'Chuyển khoản' : 'Tiền mặt'}
+                          </span>
+                          {ord.payment_status === 'PAID' ? (
+                            <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700">Đã thanh toán</span>
+                          ) : ord.status === 'CANCELLED' ? (
+                            <span className="text-gray-400 text-[10px]">-</span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleConfirmPaid(ord.id, ord.order_code)}
+                              className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 hover:bg-amber-100"
+                            >
+                              Xác nhận đã nhận tiền
+                            </button>
+                          )}
                         </td>
                         <td className="p-4">
                           {ord.is_inventory_deducted === 1 ? (
@@ -821,6 +852,70 @@ export const AdminDashboard: React.FC = () => {
                 onChange={(e) => setSettings({ ...settings, STORE_ADDRESS: e.target.value })}
                 className="w-full px-4 py-2 bg-brand-ivory/40 rounded-xl border border-brand-brown/20 text-xs font-medium text-brand-brown"
               />
+            </div>
+
+            <div className="pt-4 border-t border-brand-brown/10 space-y-4">
+              <div>
+                <h4 className="font-bold text-sm text-brand-brown">Thanh toán chuyển khoản (mã QR)</h4>
+                <p className="text-xs text-gray-500">
+                  Tải mã QR ngân hàng của tiệm. Khi có mã QR, khách sẽ thấy lựa chọn chuyển khoản lúc đặt hàng. Nhớ bấm "Lưu Cấu Hình Cửa Hàng" sau khi tải ảnh.
+                </p>
+              </div>
+
+              {settings.PAYMENT_QR_URL ? (
+                <div className="flex items-start gap-4">
+                  <img src={settings.PAYMENT_QR_URL} alt="Mã QR thanh toán" className="w-40 h-40 object-contain bg-white rounded-xl border border-brand-brown/15" />
+                  <button
+                    type="button"
+                    onClick={() => setSettings({ ...settings, PAYMENT_QR_URL: '' })}
+                    className="text-xs font-bold text-red-600 hover:underline"
+                  >
+                    Gỡ mã QR
+                  </button>
+                </div>
+              ) : (
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                  Chưa có mã QR: khách chỉ thấy hình thức tiền mặt khi nhận hàng.
+                </p>
+              )}
+
+              <label className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-dashed border-brand-brown/30 rounded-xl cursor-pointer hover:bg-brand-ivory transition-colors">
+                <Upload className="w-4 h-4 text-brand-brown-light" />
+                <span className="text-xs font-semibold text-brand-brown">Chọn ảnh mã QR để tải lên...</span>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    try {
+                      showToast('Đang tải mã QR lên...', 'info');
+                      const uploadedUrl = await api.uploadImage(file);
+                      setSettings({ ...settings, PAYMENT_QR_URL: uploadedUrl });
+                      showToast('Đã tải mã QR. Bấm Lưu Cấu Hình để áp dụng.', 'success');
+                    } catch (uErr: any) {
+                      showToast(uErr.message || 'Lỗi tải ảnh', 'error');
+                    }
+                  }}
+                />
+              </label>
+
+              {[
+                { key: 'PAYMENT_BANK_NAME', label: 'Tên ngân hàng' },
+                { key: 'PAYMENT_ACCOUNT_NAME', label: 'Chủ tài khoản' },
+                { key: 'PAYMENT_ACCOUNT_NO', label: 'Số tài khoản' },
+              ].map((f) => (
+                <div key={f.key}>
+                  <label className="block text-xs font-bold text-brand-brown mb-1">{f.label}</label>
+                  <input
+                    type="text"
+                    value={settings[f.key] || ''}
+                    onChange={(e) => setSettings({ ...settings, [f.key]: e.target.value })}
+                    className="w-full px-4 py-2 bg-brand-ivory/40 rounded-xl border border-brand-brown/20 text-xs font-medium text-brand-brown"
+                  />
+                </div>
+              ))}
             </div>
 
             <button

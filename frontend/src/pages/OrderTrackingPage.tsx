@@ -4,9 +4,11 @@ import { Search, Compass, Clock, MapPin, Phone, Package, Bike, ShieldAlert } fro
 import { api } from '../services/api.js';
 import { Order } from '../types/index.js';
 import { OrderStepper } from '../components/customer/OrderStepper.js';
+import { useStoreSettings } from '../context/StoreSettingsContext.js';
 
 export const OrderTrackingPage: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const { settings } = useStoreSettings();
   const initialCode = searchParams.get('code') || '';
 
   const [orderCodeInput, setOrderCodeInput] = useState(initialCode);
@@ -110,6 +112,43 @@ export const OrderTrackingPage: React.FC = () => {
                 {order.fulfillment_type === 'DELIVERY' ? 'Giao Tận Nơi' : 'Nhận Tại Tiệm'}
               </p>
             </div>
+          </div>
+
+          {/* Thanh toán */}
+          <div className="p-5 rounded-2xl bg-brand-ivory/60 border border-brand-brown/10 space-y-4 text-xs">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="font-bold text-brand-brown">
+                {order.payment_method === 'BANK_TRANSFER' ? 'Thanh toán: Chuyển khoản' : 'Thanh toán: Tiền mặt khi nhận hàng'}
+              </span>
+              <span className={`px-2.5 py-1 rounded-full font-bold ${order.payment_status === 'PAID' ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
+                {order.payment_status === 'PAID' ? 'Đã thanh toán' : 'Chưa thanh toán'}
+              </span>
+            </div>
+
+            {order.payment_method === 'BANK_TRANSFER' && order.payment_status !== 'PAID' && order.status !== 'CANCELLED' && settings.PAYMENT_QR_URL && (
+              <div className="flex flex-col sm:flex-row gap-5 items-start">
+                <img src={settings.PAYMENT_QR_URL} alt="Mã QR chuyển khoản" className="w-44 h-44 object-contain bg-white rounded-xl border border-brand-brown/15" />
+                <div className="space-y-2 text-brand-brown">
+                  {settings.PAYMENT_BANK_NAME && <p><strong>Ngân hàng:</strong> {settings.PAYMENT_BANK_NAME}</p>}
+                  {settings.PAYMENT_ACCOUNT_NAME && <p><strong>Chủ tài khoản:</strong> {settings.PAYMENT_ACCOUNT_NAME}</p>}
+                  {settings.PAYMENT_ACCOUNT_NO && <p><strong>Số tài khoản:</strong> {settings.PAYMENT_ACCOUNT_NO}</p>}
+                  <p><strong>Số tiền:</strong> {formatVND(order.total_amount)}</p>
+                  <p className="flex flex-wrap items-center gap-2">
+                    <span><strong>Nội dung chuyển khoản:</strong> <span className="font-mono">{order.order_code}</span></span>
+                    <button
+                      type="button"
+                      onClick={() => navigator.clipboard?.writeText(order.order_code)?.catch(() => {})}
+                      className="px-2.5 py-1 rounded-full border border-brand-brown/20 font-bold hover:border-brand-red hover:text-brand-red"
+                    >
+                      Sao chép
+                    </button>
+                  </p>
+                  <p className="text-gray-500 leading-relaxed">
+                    Quét mã QR, nhập đúng số tiền và nội dung ở trên. Tiệm sẽ xác nhận khi nhận được tiền.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Stepper */}

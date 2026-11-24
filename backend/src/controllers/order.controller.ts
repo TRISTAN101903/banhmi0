@@ -46,6 +46,15 @@ export const createOrder = (req: AuthRequest, res: Response) => {
       return sendError(res, 'Vui lòng cung cấp địa chỉ giao hàng.', 400);
     }
 
+    // Hình thức thanh toán: tiền mặt hoặc chuyển khoản (chỉ khi admin đã tải mã QR)
+    const paymentMethod = req.body.payment_method === 'BANK_TRANSFER' ? 'BANK_TRANSFER' : 'COD';
+    if (paymentMethod === 'BANK_TRANSFER') {
+      const qr = db.prepare("SELECT value FROM settings WHERE key = 'PAYMENT_QR_URL'").get() as any;
+      if (!qr || !qr.value) {
+        return sendError(res, 'Cửa hàng chưa mở thanh toán chuyển khoản. Vui lòng chọn tiền mặt.', 400);
+      }
+    }
+
     // CRITICAL: SERVER-SIDE PRICE RECALCULATION
     // Query actual product prices from database
     let subtotal = 0;
@@ -100,7 +109,7 @@ export const createOrder = (req: AuthRequest, res: Response) => {
           order_code, user_id, customer_name, customer_phone, delivery_address,
           fulfillment_type, notes, subtotal, delivery_fee, total_amount,
           payment_status, payment_method, status, is_inventory_deducted
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', 'COD', 'PENDING', 0)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, 'PENDING', 0)
       `);
 
       const orderResult = orderStmt.run(
@@ -113,7 +122,8 @@ export const createOrder = (req: AuthRequest, res: Response) => {
         notes || null,
         subtotal,
         delivery_fee,
-        total_amount
+        total_amount,
+        paymentMethod
       );
 
       const orderId = Number(orderResult.lastInsertRowid);
@@ -364,5 +374,32 @@ export const updateOrderStatus = (req: AuthRequest, res: Response) => {
   } catch (error: any) {
     console.error('Lỗi cập nhật trạng thái đơn:', error);
     return sendError(res, 'Lỗi cập nhật trạng thái đơn hàng.', 500);
+  }
+};
+
+// Admin/Staff xác nhận đã nhận tiền (chuyển khoản hoặc tiền mặt)
+export const updatePaymentStatus = (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { payment_status } = req.body;
+    if (!['PAID', 'PENDING'].includes(payment_status)) {
+      return sendError(res, 'Trạng thái thanh toán không hợp lệ.', 400);
+    }
+    const order = db.prepare('SELECT id, order_code, payment_status FROM orders WHERE id = ?').get(id) as any;
+    if (!order) {
+      return sendError(res, 'Không tìm thấy đơn hàng.', 404);
+    }
+    if (order.payment_status !== payment_status) {
+      db.prepare('UPDATE orders SET payment_status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(payment_status, order.id);
+      db.prepare(`
+        INSERT INTO order_events (order_id, event_type, old_status, new_status, note)
+        VALUES (?, 'PAYMENT_UPDATE', ?, ?, ?)
+      `).run(order.id, order.payment_status, payment_status,
+        payment_status === 'PAID' ? 'Cửa hàng đã xác nhận nhận tiền' : 'Hủy xác nhận thanh toán');
+    }
+    return sendSuccess(res, { id: order.id, payment_status }, 'Đã cập nhật thanh toán.');
+  } catch (error: any) {
+    console.error('Lỗi cập nhật thanh toán:', error);
+    return sendError(res, 'Lỗi cập nhật thanh toán.', 500);
   }
 };

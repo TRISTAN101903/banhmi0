@@ -187,6 +187,7 @@ export const api = {
     delivery_address?: string;
     fulfillment_type: 'DELIVERY' | 'PICKUP';
     notes?: string;
+    payment_method?: 'COD' | 'BANK_TRANSFER';
     items: Array<{ product_id: number; quantity: number }>;
   }): Promise<any> {
     const res = await fetch(`${API_BASE}/orders`, {
@@ -324,6 +325,17 @@ export const api = {
       body: JSON.stringify(settings),
     });
     return res.json();
+  },
+
+  // Admin xác nhận đã nhận tiền cho đơn
+  async updatePaymentStatus(orderId: number, payment_status: 'PAID' | 'PENDING'): Promise<void> {
+    const res = await fetch(`${API_BASE}/orders/${orderId}/payment`, {
+      method: 'PATCH',
+      headers: getHeaders(),
+      body: JSON.stringify({ payment_status }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Không thể cập nhật thanh toán');
   },
 
   // Image upload
