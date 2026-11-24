@@ -7,7 +7,7 @@
 - **Đường dẫn:** Bấm vào nút **"Admin"** trên thanh điều hướng hoặc truy cập `/admin`.
 - **Tài khoản mặc định:**
   - Email: `admin@banhmi0.vn`
-  - Mật khẩu: `BanhMi0@Admin2026!`
+  - Mật khẩu: `<mật khẩu bạn đặt qua ADMIN_BOOTSTRAP_PASSWORD>`
 
 ---
 
@@ -45,7 +45,7 @@
 ---
 
 ## 5. DÀNH CHO SHIPPER (CỔNG ĐIỀU PHỐI)
-1. **Đăng nhập:** Email: `shipper@banhmi0.vn` / Mật khẩu: `Shipper@123` hoặc truy cập `/shipper`.
+1. **Đăng nhập:** Email: `shipper@banhmi0.vn` / Mật khẩu: `<chỉ có khi SEED_DEMO_ACCOUNTS=true ở môi trường dev>` hoặc truy cập `/shipper`.
 2. **Xem danh sách đơn:** Shipper chỉ xem thấy những đơn được Admin phân công cho mình.
 3. **Cập nhật trạng thái:**
    - Bấm **"Bắt đầu đi giao"** -> chuyển sang `IN_TRANSIT`.

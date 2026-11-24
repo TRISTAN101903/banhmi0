@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { db } from '../database/db.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import { AuthRequest } from '../middlewares/auth.middleware.js';
+import { restockOrder, canAccessOrder } from '../utils/inventory.js';
 
 export const assignOrder = (req: AuthRequest, res: Response) => {
   try {
@@ -21,9 +22,15 @@ export const assignOrder = (req: AuthRequest, res: Response) => {
       return sendError(res, 'Người dùng được chỉ định không phải là Shipper hợp lệ.', 400);
     }
 
-    const order = db.prepare('SELECT id, status, order_code FROM orders WHERE id = ?').get(order_id) as any;
+    const order = db.prepare('SELECT id, status, order_code, fulfillment_type FROM orders WHERE id = ?').get(order_id) as any;
     if (!order) {
       return sendError(res, 'Không tìm thấy đơn hàng.', 404);
+    }
+    if (order.status === 'COMPLETED' || order.status === 'CANCELLED') {
+      return sendError(res, 'Đơn hàng đã kết thúc, không thể điều phối.', 400);
+    }
+    if (order.fulfillment_type !== 'DELIVERY') {
+      return sendError(res, 'Đơn lấy tại tiệm không cần shipper.', 400);
     }
 
     // Insert or update assignment
@@ -81,7 +88,7 @@ export const updateTaskStatus = (req: AuthRequest, res: Response) => {
     }
 
     const assignment = db.prepare(`
-      SELECT da.*, o.order_code
+      SELECT da.*, o.order_code, o.status as order_status
       FROM delivery_assignments da
       JOIN orders o ON da.order_id = o.id
       WHERE da.id = ? AND da.shipper_id = ?
@@ -89,6 +96,10 @@ export const updateTaskStatus = (req: AuthRequest, res: Response) => {
 
     if (!assignment) {
       return sendError(res, 'Không tìm thấy lượt giao hàng thuộc về bạn.', 404);
+    }
+
+    if (assignment.order_status === 'COMPLETED' || assignment.order_status === 'CANCELLED') {
+      return sendError(res, 'Đơn hàng đã kết thúc, không thể cập nhật.', 400);
     }
 
     db.exec('BEGIN TRANSACTION;');
@@ -105,6 +116,10 @@ export const updateTaskStatus = (req: AuthRequest, res: Response) => {
       if (status === 'DELIVERED') orderNewStatus = 'COMPLETED';
       if (status === 'FAILED') orderNewStatus = 'CANCELLED';
 
+      if (orderNewStatus === 'CANCELLED') {
+        restockOrder(assignment.order_id, assignment.order_code);
+      }
+
       db.prepare('UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
         .run(orderNewStatus, assignment.order_id);
 
@@ -112,7 +127,7 @@ export const updateTaskStatus = (req: AuthRequest, res: Response) => {
       db.prepare(`
         INSERT INTO order_events (order_id, event_type, old_status, new_status, note)
         VALUES (?, 'DELIVERY_UPDATE', ?, ?, ?)
-      `).run(assignment.order_id, assignment.status, orderNewStatus, note || `Shipper cập nhật trạng thái: ${status}`);
+      `).run(assignment.order_id, assignment.order_status, orderNewStatus, note || `Shipper cập nhật trạng thái: ${status}`);
 
       db.exec('COMMIT;');
 
@@ -133,6 +148,11 @@ export const recordLocation = (req: AuthRequest, res: Response) => {
 
     if (!assignment_id || latitude === undefined || longitude === undefined) {
       return sendError(res, 'Thiếu thông tin tọa độ GPS hoặc lượt giao.', 400);
+    }
+    const lat = Number(latitude);
+    const lng = Number(longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+      return sendError(res, 'Tọa độ GPS không hợp lệ.', 400);
     }
 
     const assignment = db.prepare(`
@@ -158,6 +178,14 @@ export const recordLocation = (req: AuthRequest, res: Response) => {
 export const getLatestLocation = (req: AuthRequest, res: Response) => {
   try {
     const { order_id } = req.params;
+
+    const orderRow = db.prepare('SELECT id, user_id FROM orders WHERE id = ?').get(order_id) as any;
+    if (!orderRow) {
+      return sendError(res, 'Không tìm thấy đơn hàng.', 404);
+    }
+    if (!canAccessOrder(req.user, orderRow)) {
+      return sendError(res, 'Bạn không có quyền xem vị trí của đơn này.', 403);
+    }
 
     const assignment = db.prepare('SELECT id, status FROM delivery_assignments WHERE order_id = ?').get(order_id) as any;
     if (!assignment) {

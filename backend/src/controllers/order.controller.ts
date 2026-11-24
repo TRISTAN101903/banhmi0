@@ -2,6 +2,12 @@ import { Response } from 'express';
 import { db } from '../database/db.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import { AuthRequest } from '../middlewares/auth.middleware.js';
+import { restockOrder, canAccessOrder } from '../utils/inventory.js';
+
+const STATUS_FLOW = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'COMPLETED'];
+const MAX_QTY_PER_ITEM = 50;
+const MAX_ITEMS = 30;
+const PHONE_RE = /^[0-9+()\-\s.]{8,20}$/;
 
 // Generate unique order code: BM0-YYMMDD-XXXX
 const generateOrderCode = (): string => {
@@ -21,8 +27,18 @@ export const createOrder = (req: AuthRequest, res: Response) => {
       return sendError(res, 'Tên khách hàng và số điện thoại là bắt buộc.', 400);
     }
 
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return sendError(res, 'Giỏ hàng không được để trống.', 400);
+    if (typeof customer_name !== 'string' || customer_name.trim().length > 100) {
+      return sendError(res, 'Tên khách hàng không hợp lệ.', 400);
+    }
+    if (typeof customer_phone !== 'string' || !PHONE_RE.test(customer_phone.trim())) {
+      return sendError(res, 'Số điện thoại không hợp lệ.', 400);
+    }
+    if ((delivery_address && String(delivery_address).length > 300) || (notes && String(notes).length > 500)) {
+      return sendError(res, 'Địa chỉ hoặc ghi chú quá dài.', 400);
+    }
+
+    if (!items || !Array.isArray(items) || items.length === 0 || items.length > MAX_ITEMS) {
+      return sendError(res, `Giỏ hàng phải có từ 1 đến ${MAX_ITEMS} món.`, 400);
     }
 
     const fulfillment = fulfillment_type === 'PICKUP' ? 'PICKUP' : 'DELIVERY';
@@ -47,7 +63,7 @@ export const createOrder = (req: AuthRequest, res: Response) => {
         return sendError(res, `Sản phẩm (ID: ${item.product_id}) hiện không khả dụng để đặt hàng.`, 400);
       }
 
-      const qty = Math.max(1, parseInt(item.quantity || 1, 10));
+      const qty = Math.min(MAX_QTY_PER_ITEM, Math.max(1, parseInt(item.quantity || 1, 10) || 1));
       const itemSubtotal = prod.price * qty;
       subtotal += itemSubtotal;
 
@@ -90,8 +106,8 @@ export const createOrder = (req: AuthRequest, res: Response) => {
       const orderResult = orderStmt.run(
         order_code,
         userId,
-        customer_name,
-        customer_phone,
+        customer_name.trim(),
+        customer_phone.trim(),
         delivery_address || null,
         fulfillment,
         notes || null,
@@ -165,6 +181,12 @@ export const getOrders = (req: AuthRequest, res: Response) => {
       params.push(userId);
     }
 
+    // Shipper chỉ thấy đơn được giao cho mình
+    if (userRole === 'SHIPPER') {
+      query += ` AND da.shipper_id = ?`;
+      params.push(userId);
+    }
+
     if (status && typeof status === 'string') {
       query += ` AND o.status = ?`;
       params.push(status);
@@ -200,8 +222,8 @@ export const getOrderDetail = (req: AuthRequest, res: Response) => {
       return sendError(res, 'Không tìm thấy đơn hàng.', 404);
     }
 
-    // Access control: if customer, must be order owner
-    if (req.user && req.user.role === 'CUSTOMER' && order.user_id && order.user_id !== req.user.userId) {
+    // Access control: chỉ chủ đơn, nhân sự cửa hàng, hoặc shipper được giao mới xem được
+    if (!canAccessOrder(req.user, order)) {
       return sendError(res, 'Bạn không có quyền xem đơn hàng này.', 403);
     }
 
@@ -252,6 +274,27 @@ export const updateOrderStatus = (req: AuthRequest, res: Response) => {
 
     const oldStatus = order.status;
 
+    // Shipper chỉ được cập nhật đơn được giao cho mình, và chỉ sang các trạng thái giao hàng
+    if (req.user?.role === 'SHIPPER') {
+      if (!canAccessOrder(req.user, order)) {
+        return sendError(res, 'Bạn không được giao đơn hàng này.', 403);
+      }
+      if (!['OUT_FOR_DELIVERY', 'COMPLETED'].includes(status)) {
+        return sendError(res, 'Shipper chỉ được chuyển đơn sang Đang giao hoặc Hoàn thành.', 403);
+      }
+    }
+
+    // Máy trạng thái: đơn đã hoàn thành/hủy không đổi nữa; chỉ đi tiến hoặc hủy
+    if (oldStatus === 'COMPLETED' || oldStatus === 'CANCELLED') {
+      return sendError(res, 'Đơn hàng đã kết thúc, không thể đổi trạng thái.', 400);
+    }
+    if (status === oldStatus) {
+      return sendError(res, 'Đơn hàng đã ở trạng thái này.', 400);
+    }
+    if (status !== 'CANCELLED' && STATUS_FLOW.indexOf(status) < STATUS_FLOW.indexOf(oldStatus)) {
+      return sendError(res, 'Không thể lùi trạng thái đơn hàng.', 400);
+    }
+
     db.exec('BEGIN TRANSACTION;');
     try {
       // Check if we need to auto-deduct inventory
@@ -289,6 +332,11 @@ export const updateOrderStatus = (req: AuthRequest, res: Response) => {
 
         // Mark order inventory as deducted
         db.prepare('UPDATE orders SET is_inventory_deducted = 1 WHERE id = ?').run(order.id);
+      }
+
+      // Hủy đơn đã trừ kho -> hoàn kho
+      if (status === 'CANCELLED') {
+        restockOrder(order.id, order.order_code);
       }
 
       // Update order status

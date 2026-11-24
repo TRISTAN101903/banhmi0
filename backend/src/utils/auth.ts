@@ -20,13 +20,14 @@ export const comparePassword = async (plain: string, hashed: string): Promise<bo
 
 export const signToken = (payload: TokenPayload): string => {
   return jwt.sign(payload, config.jwtSecret, {
-    expiresIn: '7d',
+    expiresIn: config.jwtExpiresIn as any,
+    algorithm: 'HS256',
   });
 };
 
 export const verifyToken = (token: string): TokenPayload | null => {
   try {
-    return jwt.verify(token, config.jwtSecret) as TokenPayload;
+    return jwt.verify(token, config.jwtSecret, { algorithms: ['HS256'] }) as TokenPayload;
   } catch (err) {
     return null;
   }

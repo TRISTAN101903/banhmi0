@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { db, initSchema } from './db.js';
 import { config } from '../config/index.js';
 
@@ -46,42 +47,66 @@ export const seedDatabase = async () => {
       config.adminBootstrap.phone,
       config.store.address
     );
-    console.log(`[SEED] Đã tạo Admin mặc định: ${config.adminBootstrap.email}`);
+    console.log(`[SEED] Đã tạo Admin: ${config.adminBootstrap.email}`);
+    if (!config.adminBootstrap.passwordFromEnv && config.isProduction) {
+      console.log(`[SEED] Mật khẩu admin ngẫu nhiên (chỉ hiện 1 lần, hãy đổi/đặt ADMIN_BOOTSTRAP_PASSWORD): ${config.adminBootstrap.password}`);
+    }
+  } else if (config.adminBootstrap.passwordFromEnv) {
+    // Đồng bộ mật khẩu admin theo biến môi trường -> cách đổi mật khẩu admin cũ đã bị lộ trên DB đang chạy
+    const row = db.prepare('SELECT id, password_hash FROM users WHERE email = ?').get(config.adminBootstrap.email) as any;
+    if (!(await bcrypt.compare(config.adminBootstrap.password, row.password_hash))) {
+      db.prepare('UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+        .run(await bcrypt.hash(config.adminBootstrap.password, 10), row.id);
+      console.log('[SEED] Đã cập nhật mật khẩu admin theo ADMIN_BOOTSTRAP_PASSWORD.');
+    }
   }
 
   // 3. Demo Shipper & Staff
-  const shipperExists = db.prepare('SELECT id FROM users WHERE email = ?').get('shipper@banhmi0.vn');
-  if (!shipperExists) {
-    const shipperPass = await bcrypt.hash('Shipper@123', 10);
-    db.prepare(`
-      INSERT INTO users (role_id, email, password_hash, full_name, phone, address)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(
-      shipperRoleId,
-      'shipper@banhmi0.vn',
-      shipperPass,
-      'Nguyễn Văn Giao (Shipper BM0)',
-      '0911223344',
-      'Đội vận chuyển BÁNH MÌ 0'
-    );
-    console.log('[SEED] Đã tạo Shipper demo: shipper@banhmi0.vn (Mật khẩu: Shipper@123)');
-  }
+  if (config.seedDemoAccounts) {
+    const shipperExists = db.prepare('SELECT id FROM users WHERE email = ?').get('shipper@banhmi0.vn');
+    if (!shipperExists) {
+      const shipperPass = await bcrypt.hash('Shipper@123', 10);
+      db.prepare(`
+        INSERT INTO users (role_id, email, password_hash, full_name, phone, address)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).run(
+        shipperRoleId,
+        'shipper@banhmi0.vn',
+        shipperPass,
+        'Nguyễn Văn Giao (Shipper BM0)',
+        '0911223344',
+        'Đội vận chuyển BÁNH MÌ 0'
+      );
+      console.log('[SEED] Đã tạo Shipper demo: shipper@banhmi0.vn (Mật khẩu: Shipper@123)');
+    }
 
-  const staffExists = db.prepare('SELECT id FROM users WHERE email = ?').get('staff@banhmi0.vn');
-  if (!staffExists) {
-    const staffPass = await bcrypt.hash('Staff@123', 10);
-    db.prepare(`
-      INSERT INTO users (role_id, email, password_hash, full_name, phone, address)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(
-      staffRoleId,
-      'staff@banhmi0.vn',
-      staffPass,
-      'Trần Thị Bếp (Bếp Trưởng BM0)',
-      '0922334455',
-      'Quầy phục vụ BÁNH MÌ 0'
-    );
-    console.log('[SEED] Đã tạo Staff demo: staff@banhmi0.vn (Mật khẩu: Staff@123)');
+    const staffExists = db.prepare('SELECT id FROM users WHERE email = ?').get('staff@banhmi0.vn');
+    if (!staffExists) {
+      const staffPass = await bcrypt.hash('Staff@123', 10);
+      db.prepare(`
+        INSERT INTO users (role_id, email, password_hash, full_name, phone, address)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).run(
+        staffRoleId,
+        'staff@banhmi0.vn',
+        staffPass,
+        'Trần Thị Bếp (Bếp Trưởng BM0)',
+        '0922334455',
+        'Quầy phục vụ BÁNH MÌ 0'
+      );
+      console.log('[SEED] Đã tạo Staff demo: staff@banhmi0.vn (Mật khẩu: Staff@123)');
+    }
+  } else {
+    // Production: vô hiệu hóa các tài khoản demo cũ nếu còn dùng mật khẩu công khai trong README
+    const demoAccounts = [['shipper@banhmi0.vn', 'Shipper@123'], ['staff@banhmi0.vn', 'Staff@123']];
+    for (const [email, knownPass] of demoAccounts) {
+      const row = db.prepare('SELECT id, password_hash FROM users WHERE email = ?').get(email) as any;
+      if (row && (await bcrypt.compare(knownPass, row.password_hash))) {
+        const randomPass = crypto.randomBytes(24).toString('base64url');
+        db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(await bcrypt.hash(randomPass, 10), row.id);
+        console.log(`[SEED] Đã khóa tài khoản demo ${email} (đang dùng mật khẩu công khai). Admin hãy đặt mật khẩu mới nếu cần dùng.`);
+      }
+    }
   }
 
   // 4. Categories

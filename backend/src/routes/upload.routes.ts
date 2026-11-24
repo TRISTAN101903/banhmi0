@@ -19,7 +19,7 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
+    const ext = ({ 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' } as Record<string, string>)[file.mimetype] || '.jpg';
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     cb(null, `product-${uniqueSuffix}${ext}`);
   }
@@ -44,6 +44,19 @@ router.post('/', authenticate, requireRoles('ADMIN', 'STAFF'), upload.single('im
   try {
     if (!req.file) {
       return sendError(res, 'Vui lòng chọn file hình ảnh hợp lệ.', 400);
+    }
+
+    // Kiểm tra nội dung thật của file (magic bytes), không chỉ tin mimetype/đuôi file khai báo
+    const head = Buffer.alloc(12);
+    const fd = fs.openSync(req.file.path, 'r');
+    fs.readSync(fd, head, 0, 12, 0);
+    fs.closeSync(fd);
+    const isJpeg = head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff;
+    const isPng = head.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+    const isWebp = head.subarray(0, 4).toString() === 'RIFF' && head.subarray(8, 12).toString() === 'WEBP';
+    if (!isJpeg && !isPng && !isWebp) {
+      fs.unlinkSync(req.file.path);
+      return sendError(res, 'File không phải ảnh hợp lệ.', 400);
     }
 
     const fileUrl = `/uploads/products/${req.file.filename}`;

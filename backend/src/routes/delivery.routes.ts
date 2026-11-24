@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { assignOrder, getShipperTasks, updateTaskStatus, recordLocation, getLatestLocation } from '../controllers/delivery.controller.js';
-import { authenticate, optionalAuthenticate, requireRoles } from '../middlewares/auth.middleware.js';
+import { authenticate, requireRoles } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
@@ -17,6 +17,6 @@ router.patch('/tasks/:assignment_id/status', authenticate, requireRoles('SHIPPER
 router.post('/location', authenticate, requireRoles('SHIPPER'), recordLocation);
 
 // Customer or Admin tracks live location
-router.get('/location/:order_id', optionalAuthenticate, getLatestLocation);
+router.get('/location/:order_id', authenticate, getLatestLocation);
 
 export default router;

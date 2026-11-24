@@ -69,11 +69,40 @@ export const getSettings = (req: AuthRequest, res: Response) => {
   }
 };
 
+const ALLOWED_SETTINGS = [
+  'STORE_NAME', 'STORE_SLOGAN', 'DESIGN_SIGNATURE', 'STORE_PHONE', 'STORE_ADDRESS', 'STORE_HOURS',
+  'DELIVERY_BASE_FEE', 'DELIVERY_FREE_THRESHOLD',
+  'STORE_LOGO_URL', 'STORE_SHOWCASE_URL', 'STORE_CONCEPT_IMAGE_URL',
+];
+const NUMERIC_SETTINGS = ['DELIVERY_BASE_FEE', 'DELIVERY_FREE_THRESHOLD'];
+const URL_SETTINGS = ['STORE_LOGO_URL', 'STORE_SHOWCASE_URL', 'STORE_CONCEPT_IMAGE_URL'];
+
 export const updateSettings = (req: AuthRequest, res: Response) => {
   try {
     const settings = req.body;
-    const updateStmt = db.prepare('INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)');
+    if (!settings || typeof settings !== 'object' || Array.isArray(settings)) {
+      return sendError(res, 'Dữ liệu cài đặt không hợp lệ.', 400);
+    }
 
+    // Chỉ cho phép các khóa đã biết, kiểm tra giá trị trước khi ghi
+    for (const [key, value] of Object.entries(settings)) {
+      if (!ALLOWED_SETTINGS.includes(key)) {
+        return sendError(res, `Khóa cài đặt không được phép: ${key}`, 400);
+      }
+      const str = String(value);
+      if (str.length > 500) {
+        return sendError(res, `Giá trị của ${key} quá dài.`, 400);
+      }
+      if (NUMERIC_SETTINGS.includes(key) && (!Number.isFinite(Number(str)) || Number(str) < 0)) {
+        return sendError(res, `${key} phải là số không âm.`, 400);
+      }
+      // Chỉ nhận đường dẫn nội bộ hoặc https, chặn javascript:/data: URL
+      if (URL_SETTINGS.includes(key) && !(str.startsWith('/') && !str.startsWith('//')) && !/^https:\/\//i.test(str)) {
+        return sendError(res, `${key} phải là đường dẫn nội bộ hoặc https.`, 400);
+      }
+    }
+
+    const updateStmt = db.prepare('INSERT INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP');
     for (const [key, value] of Object.entries(settings)) {
       updateStmt.run(key, String(value));
     }

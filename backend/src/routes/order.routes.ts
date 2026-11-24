@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { createOrder, getOrders, getOrderDetail, updateOrderStatus } from '../controllers/order.controller.js';
-import { authenticate, optionalAuthenticate, requireRoles } from '../middlewares/auth.middleware.js';
+import { authenticate, requireRoles } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
@@ -11,7 +11,7 @@ router.post('/', authenticate, createOrder);
 router.get('/', authenticate, getOrders);
 
 // Tracking or detail by ID or order_code
-router.get('/:identifier', optionalAuthenticate, getOrderDetail);
+router.get('/:identifier', authenticate, getOrderDetail);
 
 // Updating order status (Admin, Staff, or Shipper)
 router.patch('/:id/status', authenticate, requireRoles('ADMIN', 'STAFF', 'SHIPPER'), updateOrderStatus);

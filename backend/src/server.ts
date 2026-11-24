@@ -19,6 +19,11 @@ import uploadRoutes from './routes/upload.routes.js';
 
 const app = express();
 
+// Sau proxy của Render: lấy IP thật của khách để rate-limit đăng nhập đúng theo từng người
+if (config.isProduction) {
+  app.set('trust proxy', 1);
+}
+
 // Middlewares
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
@@ -35,8 +40,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(morgan('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '100kb' }));
+app.use(express.urlencoded({ extended: true, limit: '100kb' }));
 
 // Serve static uploads
 const uploadsPath = config.uploadsDir;
@@ -44,6 +49,8 @@ if (!fs.existsSync(uploadsPath)) {
   fs.mkdirSync(uploadsPath, { recursive: true });
 }
 app.use('/uploads', express.static(uploadsPath));
+// Ảnh thương hiệu đi kèm mã nguồn (khi DATA_DIR trỏ sang ổ đĩa riêng)
+app.use('/uploads', express.static(path.resolve(config.workspaceRoot, 'uploads')));
 
 // Serve the built frontend (enables single-service deploy: Render/Railway/VPS
 // serve both API and static site from one process). Skipped in local dev
@@ -70,10 +77,7 @@ app.use(`${apiPrefix}/upload`, uploadRoutes);
 app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
-    app: config.store.name,
-    slogan: config.store.slogan,
     timestamp: new Date().toISOString(),
-    env: config.env,
   });
 });
 
@@ -88,9 +92,13 @@ if (hasFrontendBuild) {
 // Fallback error handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Unhandled Server Error:', err);
+  // Lỗi do người dùng gửi file không hợp lệ -> 400 thay vì 500
+  if (err && (err.name === 'MulterError' || String(err.message || '').startsWith('Chỉ chấp nhận'))) {
+    return res.status(400).json({ success: false, message: err.message, error: err.message });
+  }
   res.status(500).json({
     success: false,
-    message: err.message || 'Lỗi máy chủ nội bộ',
+    message: config.isProduction ? 'Lỗi máy chủ nội bộ' : (err.message || 'Lỗi máy chủ nội bộ'),
     error: config.env === 'development' ? err.stack : undefined,
   });
 });

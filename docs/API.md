@@ -35,8 +35,8 @@
 - **Method:** `POST /api/v1/auth/login`
 - **Body:** `{ "email": "...", "password": "..." }`
 - **Tài khoản mẫu:**
-  - Admin: `admin@banhmi0.vn` / `BanhMi0@Admin2026!`
-  - Shipper: `shipper@banhmi0.vn` / `Shipper@123`
+  - Admin: `admin@banhmi0.vn` / `<mật khẩu bạn đặt qua ADMIN_BOOTSTRAP_PASSWORD>`
+  - Shipper: `shipper@banhmi0.vn` / `<chỉ có khi SEED_DEMO_ACCOUNTS=true ở môi trường dev>`
 
 ---
 

@@ -114,8 +114,8 @@ Truy cập trình duyệt tại: **`http://localhost:5173`**
 
 | Vai trò | Email đăng nhập | Mật khẩu | Chức năng chính |
 | :--- | :--- | :--- | :--- |
-| **Quản Trị Viên (Admin)** | `admin@banhmi0.vn` | `BanhMi0@Admin2026!` | Toàn quyền quản trị đơn, kho, sản phẩm, cài đặt ảnh đại diện |
-| **Nhân Viên Giao Hàng (Shipper)** | `shipper@banhmi0.vn` | `Shipper@123` | Xem đơn phân công, cập nhật giao hàng, bật/tắt GPS |
+| **Quản Trị Viên (Admin)** | `admin@banhmi0.vn` | `<mật khẩu bạn đặt qua ADMIN_BOOTSTRAP_PASSWORD>` | Toàn quyền quản trị đơn, kho, sản phẩm, cài đặt ảnh đại diện |
+| **Nhân Viên Giao Hàng (Shipper)** | `shipper@banhmi0.vn` | `<chỉ có khi SEED_DEMO_ACCOUNTS=true ở môi trường dev>` | Xem đơn phân công, cập nhật giao hàng, bật/tắt GPS |
 | **Khách Hàng (Customer)** | Đăng ký tài khoản mới trực tiếp trên web | Tự chọn | Đặt bánh, giỏ hàng, tra cứu tiến trình đơn |
 
 ---

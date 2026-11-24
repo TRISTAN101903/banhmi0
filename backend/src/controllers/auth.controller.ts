@@ -4,20 +4,31 @@ import { hashPassword, comparePassword, signToken } from '../utils/auth.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import { AuthRequest } from '../middlewares/auth.middleware.js';
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
 export const register = async (req: Request, res: Response) => {
   try {
-    const { email, password, full_name, phone, address } = req.body;
+    const { password, full_name, phone, address } = req.body;
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
 
-    if (!email || !password || !full_name) {
+    if (!email || typeof password !== 'string' || typeof full_name !== 'string' || !full_name.trim()) {
       return sendError(res, 'Vui lòng cung cấp đầy đủ email, mật khẩu và họ tên.', 400);
     }
 
-    if (password.length < 6) {
-      return sendError(res, 'Mật khẩu phải chứa ít nhất 6 ký tự.', 400);
+    if (!EMAIL_RE.test(email) || email.length > 120) {
+      return sendError(res, 'Email không hợp lệ.', 400);
+    }
+
+    if (password.length < 6 || password.length > 72) {
+      return sendError(res, 'Mật khẩu phải từ 6 đến 72 ký tự.', 400);
+    }
+
+    if (full_name.length > 100 || (phone && String(phone).length > 20) || (address && String(address).length > 300)) {
+      return sendError(res, 'Thông tin cá nhân quá dài.', 400);
     }
 
     // Check if email already exists
-    const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+    const existing = db.prepare('SELECT id FROM users WHERE lower(email) = ?').get(email);
     if (existing) {
       return sendError(res, 'Email này đã được đăng ký tài khoản trong hệ thống.', 409);
     }
@@ -58,9 +69,10 @@ export const register = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const password = req.body.password;
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
 
-    if (!email || !password) {
+    if (!email || typeof password !== 'string' || !password) {
       return sendError(res, 'Vui lòng nhập email và mật khẩu.', 400);
     }
 
@@ -68,7 +80,7 @@ export const login = async (req: Request, res: Response) => {
       SELECT u.id, u.email, u.password_hash, u.full_name, u.phone, u.address, r.code as role
       FROM users u
       JOIN roles r ON u.role_id = r.id
-      WHERE u.email = ?
+      WHERE lower(u.email) = ?
     `).get(email) as any;
 
     if (!user) {
