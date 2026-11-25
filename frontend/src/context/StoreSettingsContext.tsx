@@ -9,22 +9,26 @@ interface StoreSettingsContextType {
   logoUrl: string;
   showcaseUrl: string;
   conceptImageUrl: string;
+  settings: Record<string, string>;
 }
 
 const StoreSettingsContext = createContext<StoreSettingsContextType>({
   logoUrl: DEFAULT_LOGO,
   showcaseUrl: DEFAULT_SHOWCASE,
   conceptImageUrl: DEFAULT_CONCEPT_IMAGE,
+  settings: {},
 });
 
 export const StoreSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [logoUrl, setLogoUrl] = useState(DEFAULT_LOGO);
   const [showcaseUrl, setShowcaseUrl] = useState(DEFAULT_SHOWCASE);
   const [conceptImageUrl, setConceptImageUrl] = useState(DEFAULT_CONCEPT_IMAGE);
+  const [allSettings, setAllSettings] = useState<Record<string, string>>({});
 
   useEffect(() => {
     api.getSettings()
       .then((settings) => {
+        setAllSettings(settings || {});
         if (settings.STORE_LOGO_URL) setLogoUrl(settings.STORE_LOGO_URL);
         if (settings.STORE_SHOWCASE_URL) setShowcaseUrl(settings.STORE_SHOWCASE_URL);
         if (settings.STORE_CONCEPT_IMAGE_URL) setConceptImageUrl(settings.STORE_CONCEPT_IMAGE_URL);
@@ -35,7 +39,7 @@ export const StoreSettingsProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   return (
-    <StoreSettingsContext.Provider value={{ logoUrl, showcaseUrl, conceptImageUrl }}>
+    <StoreSettingsContext.Provider value={{ logoUrl, showcaseUrl, conceptImageUrl, settings: allSettings }}>
       {children}
     </StoreSettingsContext.Provider>
   );
