@@ -14,6 +14,27 @@ export const loginRateLimiter = rateLimit({
   },
 });
 
+// Khách không cần đăng nhập: giới hạn số đơn và số lần tra cứu để chống spam
+export const guestOrderLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    sendError(res, 'Bạn đặt hàng quá nhiều lần. Vui lòng thử lại sau hoặc gọi hotline của tiệm.', 429);
+  },
+});
+
+export const trackLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 40,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    sendError(res, 'Tra cứu quá nhiều lần. Vui lòng thử lại sau ít phút.', 429);
+  },
+});
+
 export interface AuthRequest extends Request {
   user?: TokenPayload;
 }

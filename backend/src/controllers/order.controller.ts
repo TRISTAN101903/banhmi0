@@ -233,7 +233,14 @@ export const getOrderDetail = (req: AuthRequest, res: Response) => {
     }
 
     // Access control: chỉ chủ đơn, nhân sự cửa hàng, hoặc shipper được giao mới xem được
-    if (!canAccessOrder(req.user, order)) {
+    if (!req.user) {
+      // Khách vãng lai: chỉ tra bằng mã đơn và phải đúng số điện thoại đặt hàng
+      const digits = (v: any) => String(v || '').replace(/\D/g, '');
+      const phoneOk = digits(req.query.phone).length >= 8 && digits(req.query.phone) === digits(order.customer_phone);
+      if (!isNaN(Number(identifier)) || !phoneOk) {
+        return sendError(res, 'Không tìm thấy đơn hàng.', 404);
+      }
+    } else if (!canAccessOrder(req.user, order)) {
       return sendError(res, 'Bạn không có quyền xem đơn hàng này.', 403);
     }
 

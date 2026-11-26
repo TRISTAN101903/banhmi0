@@ -10,19 +10,21 @@ export const OrderTrackingPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const { settings } = useStoreSettings();
   const initialCode = searchParams.get('code') || '';
+  const initialPhone = searchParams.get('phone') || '';
 
   const [orderCodeInput, setOrderCodeInput] = useState(initialCode);
+  const [phoneInput, setPhoneInput] = useState(initialPhone);
   const [order, setOrder] = useState<Order | null>(null);
   const [locationInfo, setLocationInfo] = useState<{ has_location: boolean; latitude?: number; longitude?: number; message?: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
 
-  const fetchOrder = async (code: string) => {
+  const fetchOrder = async (code: string, phone: string = '') => {
     if (!code.trim()) return;
     setIsLoading(true);
     setSearchError(null);
     try {
-      const data = await api.getOrderDetail(code.trim());
+      const data = await api.getOrderDetail(code.trim(), phone.trim());
       setOrder(data);
 
       // Check delivery GPS if available
@@ -31,7 +33,7 @@ export const OrderTrackingPage: React.FC = () => {
         setLocationInfo(loc);
       }
     } catch (err: any) {
-      setSearchError('Không tìm thấy đơn hàng với mã này. Vui lòng kiểm tra lại.');
+      setSearchError('Không tìm thấy đơn hàng. Vui lòng kiểm tra lại mã đơn và số điện thoại đã đặt hàng.');
       setOrder(null);
       setLocationInfo(null);
     } finally {
@@ -41,13 +43,13 @@ export const OrderTrackingPage: React.FC = () => {
 
   useEffect(() => {
     if (initialCode) {
-      fetchOrder(initialCode);
+      fetchOrder(initialCode, initialPhone);
     }
   }, [initialCode]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchOrder(orderCodeInput);
+    fetchOrder(orderCodeInput, phoneInput);
   };
 
   const formatVND = (amount: number) =>
@@ -70,7 +72,7 @@ export const OrderTrackingPage: React.FC = () => {
       </div>
 
       {/* Search Bar */}
-      <form onSubmit={handleSearch} className="max-w-xl mx-auto flex gap-2">
+      <form onSubmit={handleSearch} className="max-w-xl mx-auto flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
           <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
           <input
@@ -81,6 +83,13 @@ export const OrderTrackingPage: React.FC = () => {
             className="w-full pl-11 pr-4 py-3 bg-white rounded-full border border-brand-brown/20 text-xs sm:text-sm text-brand-brown font-medium focus:outline-none focus:ring-2 focus:ring-brand-red/30 focus:border-brand-red shadow-sm"
           />
         </div>
+        <input
+          type="tel"
+          placeholder="Số điện thoại đặt hàng"
+          value={phoneInput}
+          onChange={(e) => setPhoneInput(e.target.value)}
+          className="sm:w-52 px-4 py-3 bg-white rounded-full border border-brand-brown/20 text-xs sm:text-sm text-brand-brown font-medium focus:outline-none focus:ring-2 focus:ring-brand-red/30 focus:border-brand-red shadow-sm"
+        />
         <button
           type="submit"
           disabled={isLoading}

@@ -45,36 +45,6 @@ export const CheckoutPage: React.FC = () => {
     );
   }
 
-  if (!user) {
-    return (
-      <div className="max-w-md mx-auto px-4 py-24 text-center space-y-4">
-        <div className="w-16 h-16 rounded-full bg-brand-ivory mx-auto flex items-center justify-center text-brand-brown-light">
-          <User className="w-8 h-8 opacity-40" />
-        </div>
-        <h2 className="text-2xl font-bold text-brand-brown">Bạn cần đăng nhập để đặt hàng</h2>
-        <p className="text-xs text-gray-500">
-          Đăng nhập hoặc tạo tài khoản để theo dõi đơn hàng và nhận ưu đãi dành riêng cho thành viên.
-        </p>
-        <div className="flex items-center justify-center gap-3 pt-2">
-          <Link
-            to="/login"
-            state={{ from: '/checkout' }}
-            className="px-6 py-2.5 rounded-full bg-brand-brown text-white text-xs font-bold"
-          >
-            Đăng nhập
-          </Link>
-          <Link
-            to="/register"
-            state={{ from: '/checkout' }}
-            className="px-6 py-2.5 rounded-full border border-brand-brown/30 text-brand-brown text-xs font-bold"
-          >
-            Đăng ký
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -116,7 +86,7 @@ export const CheckoutPage: React.FC = () => {
 
       showToast(`Đặt hàng thành công! Mã đơn: ${result.order_code}`, 'success');
       clearCart();
-      navigate(`/tracking?code=${result.order_code}`);
+      navigate(`/tracking?code=${result.order_code}&phone=${encodeURIComponent(customerPhone.trim())}`);
     } catch (error: any) {
       showToast(error.message || 'Lỗi khi gửi đơn hàng', 'error');
     } finally {

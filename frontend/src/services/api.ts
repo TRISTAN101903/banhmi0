@@ -211,8 +211,9 @@ export const api = {
     return data.data;
   },
 
-  async getOrderDetail(identifier: string | number): Promise<Order> {
-    const res = await fetch(`${API_BASE}/orders/${identifier}`, { headers: getHeaders() });
+  async getOrderDetail(identifier: string | number, phone?: string): Promise<Order> {
+    const q = phone ? `?phone=${encodeURIComponent(phone)}` : '';
+    const res = await fetch(`${API_BASE}/orders/${identifier}${q}`, { headers: getHeaders() });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || 'Không tìm thấy thông tin đơn hàng');
     return data.data;
