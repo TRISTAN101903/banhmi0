@@ -188,6 +188,69 @@ export const CheckoutPage: React.FC = () => {
             </div>
           </div>
 
+          {/* Payment Method */}
+          <div className="bg-white p-6 rounded-3xl border border-brand-brown/10 shadow-warm space-y-4">
+            <h3 className="font-bold text-base text-brand-brown flex items-center gap-2">
+              <span>Hình Thức Thanh Toán</span>
+            </h3>
+
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => setPaymentMethod('COD')}
+                className={`p-4 rounded-2xl border text-left flex flex-col justify-between transition-all ${
+                  paymentMethod === 'COD' || !hasQr
+                    ? 'border-brand-red bg-brand-red-light/40 ring-2 ring-brand-red/20'
+                    : 'border-brand-brown/15 bg-brand-ivory/50 hover:bg-white'
+                }`}
+              >
+                <ShoppingBag className={`w-5 h-5 mb-2 ${paymentMethod === 'COD' || !hasQr ? 'text-brand-red' : 'text-gray-400'}`} />
+                <div>
+                  <p className="font-bold text-sm text-brand-brown">Tiền Mặt</p>
+                  <p className="text-[11px] text-gray-500">Trả khi nhận được bánh</p>
+                </div>
+              </button>
+
+              {hasQr && (
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('BANK_TRANSFER')}
+                  className={`p-4 rounded-2xl border text-left flex flex-col justify-between transition-all ${
+                    paymentMethod === 'BANK_TRANSFER'
+                      ? 'border-brand-red bg-brand-red-light/40 ring-2 ring-brand-red/20'
+                      : 'border-brand-brown/15 bg-brand-ivory/50 hover:bg-white'
+                  }`}
+                >
+                  <ShieldCheck className={`w-5 h-5 mb-2 ${paymentMethod === 'BANK_TRANSFER' ? 'text-brand-red' : 'text-gray-400'}`} />
+                  <div>
+                    <p className="font-bold text-sm text-brand-brown">Chuyển Khoản</p>
+                    <p className="text-[11px] text-gray-500">Trả trước bằng mã QR</p>
+                  </div>
+                </button>
+              )}
+            </div>
+
+            {hasQr && paymentMethod === 'BANK_TRANSFER' && (
+              <div className="flex flex-col sm:flex-row gap-5 items-start p-4 rounded-2xl bg-brand-ivory/60 border border-brand-brown/10 text-xs">
+                <img
+                  src={settings.PAYMENT_QR_URL}
+                  alt="Mã QR chuyển khoản"
+                  className="w-44 h-44 object-contain bg-white rounded-xl border border-brand-brown/15"
+                />
+                <div className="space-y-2 text-brand-brown">
+                  {settings.PAYMENT_BANK_NAME && <p><strong>Ngân hàng:</strong> {settings.PAYMENT_BANK_NAME}</p>}
+                  {settings.PAYMENT_ACCOUNT_NAME && <p><strong>Chủ tài khoản:</strong> {settings.PAYMENT_ACCOUNT_NAME}</p>}
+                  {settings.PAYMENT_ACCOUNT_NO && <p><strong>Số tài khoản:</strong> {settings.PAYMENT_ACCOUNT_NO}</p>}
+                  <p><strong>Số tiền:</strong> {formatVND(estimatedTotal)}</p>
+                  <p><strong>Nội dung chuyển khoản:</strong> {customerPhone || 'số điện thoại đặt hàng'}</p>
+                  <p className="text-gray-500 leading-relaxed">
+                    Quét mã, nhập đúng số tiền và nội dung ở trên. Chuyển xong thì bấm "Đặt Món Ngay". Tiệm sẽ xác nhận khi nhận được tiền.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Customer Details Form */}
           <div className="bg-white p-6 rounded-3xl border border-brand-brown/10 shadow-warm space-y-4">
             <h3 className="font-bold text-base text-brand-brown flex items-center gap-2">
@@ -297,25 +360,11 @@ export const CheckoutPage: React.FC = () => {
             </div>
 
             {/* Payment method */}
-            <fieldset className="space-y-2">
-              <legend className="text-xs font-bold text-brand-brown mb-1">Hình thức thanh toán</legend>
-              <label className={`flex items-start gap-3 p-3 rounded-xl border text-xs cursor-pointer ${paymentMethod === 'COD' || !hasQr ? 'border-brand-red bg-brand-red-light/40' : 'border-brand-brown/15 bg-white'}`}>
-                <input type="radio" name="payment" className="mt-0.5" checked={paymentMethod === 'COD' || !hasQr} onChange={() => setPaymentMethod('COD')} />
-                <span>
-                  <strong className="block text-brand-brown">Tiền mặt khi nhận hàng</strong>
-                  <span className="text-gray-500">Thanh toán khi nhận được bánh.</span>
-                </span>
-              </label>
-              {hasQr && (
-                <label className={`flex items-start gap-3 p-3 rounded-xl border text-xs cursor-pointer ${paymentMethod === 'BANK_TRANSFER' ? 'border-brand-red bg-brand-red-light/40' : 'border-brand-brown/15 bg-white'}`}>
-                  <input type="radio" name="payment" className="mt-0.5" checked={paymentMethod === 'BANK_TRANSFER'} onChange={() => setPaymentMethod('BANK_TRANSFER')} />
-                  <span>
-                    <strong className="block text-brand-brown">Chuyển khoản qua mã QR</strong>
-                    <span className="text-gray-500">Sau khi đặt hàng, bạn sẽ thấy mã QR kèm số tiền và nội dung chuyển khoản.</span>
-                  </span>
-                </label>
-              )}
-            </fieldset>
+            <div className="p-3 bg-brand-cream/60 rounded-xl border border-brand-brown/10 text-xs">
+              <p className="font-bold text-brand-brown">
+                {hasQr && paymentMethod === 'BANK_TRANSFER' ? 'Thanh toán: Chuyển khoản trả trước' : 'Thanh toán: Tiền mặt khi nhận hàng'}
+              </p>
+            </div>
 
             {/* Submit button */}
             <button
