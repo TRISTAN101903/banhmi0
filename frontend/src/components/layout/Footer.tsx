@@ -4,7 +4,7 @@ import { Phone, MapPin, Clock, Heart, ShieldCheck } from 'lucide-react';
 import { useStoreSettings } from '../../context/StoreSettingsContext.js';
 
 export const Footer: React.FC = () => {
-  const { logoUrl } = useStoreSettings();
+  const { logoUrl, settings } = useStoreSettings();
   return (
     <footer className="bg-brand-brown text-brand-cream border-t border-brand-brown-dark/30 pt-16 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -63,15 +63,15 @@ export const Footer: React.FC = () => {
             <ul className="space-y-3 text-sm text-brand-cream/80">
               <li className="flex items-start gap-3">
                 <MapPin className="w-4 h-4 text-brand-red shrink-0 mt-0.5" />
-                <span>123 Đường Bánh Mì, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh</span>
+                <span>{settings.STORE_ADDRESS || '123 Đường Bánh Mì, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh'}</span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-4 h-4 text-brand-red shrink-0" />
-                <span className="font-semibold text-white">0987 654 321</span>
+                <span className="font-semibold text-white">{settings.STORE_PHONE || '0987 654 321'}</span>
               </li>
               <li className="flex items-center gap-3">
                 <Clock className="w-4 h-4 text-brand-red shrink-0" />
-                <span>06:00 – 21:00 (Thứ 2 – Chủ Nhật)</span>
+                <span>{settings.STORE_HOURS || '06:00 – 21:00 (Thứ 2 – Chủ Nhật)'}</span>
               </li>
             </ul>
           </div>

@@ -182,7 +182,7 @@ export const CheckoutPage: React.FC = () => {
                 <Store className={`w-5 h-5 mb-2 ${fulfillmentType === 'PICKUP' ? 'text-brand-red' : 'text-gray-400'}`} />
                 <div>
                   <p className="font-bold text-sm text-brand-brown">Đến Lấy Tại Tiệm</p>
-                  <p className="text-[11px] text-gray-500">123 Đường Bánh Mì, Q.1</p>
+                  <p className="text-[11px] text-gray-500">{settings.STORE_ADDRESS || '123 Đường Bánh Mì, Q.1'}</p>
                 </div>
               </button>
             </div>

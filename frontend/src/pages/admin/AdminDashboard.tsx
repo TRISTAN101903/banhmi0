@@ -835,6 +835,16 @@ export const AdminDashboard: React.FC = () => {
             </div>
 
             <div>
+              <label className="block text-xs font-bold text-brand-brown mb-1">Giờ mở cửa</label>
+              <input
+                type="text"
+                value={settings.STORE_HOURS || '06:00 – 21:00 (Thứ 2 – Chủ Nhật)'}
+                onChange={(e) => setSettings({ ...settings, STORE_HOURS: e.target.value })}
+                className="w-full px-4 py-2 bg-brand-ivory/40 rounded-xl border border-brand-brown/20 text-xs font-medium text-brand-brown"
+              />
+            </div>
+
+            <div>
               <label className="block text-xs font-bold text-brand-brown mb-1">Hotline cửa hàng</label>
               <input
                 type="text"
