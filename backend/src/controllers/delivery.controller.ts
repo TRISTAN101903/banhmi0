@@ -123,6 +123,11 @@ export const updateTaskStatus = (req: AuthRequest, res: Response) => {
       db.prepare('UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
         .run(orderNewStatus, assignment.order_id);
 
+      // Giao xong đơn tiền mặt nghĩa là shipper đã thu tiền
+      if (orderNewStatus === 'COMPLETED') {
+        db.prepare("UPDATE orders SET payment_status = 'PAID' WHERE id = ? AND payment_method = 'COD'").run(assignment.order_id);
+      }
+
       // Record event
       db.prepare(`
         INSERT INTO order_events (order_id, event_type, old_status, new_status, note)

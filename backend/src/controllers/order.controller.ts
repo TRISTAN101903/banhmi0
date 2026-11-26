@@ -309,7 +309,7 @@ export const updateOrderStatus = (req: AuthRequest, res: Response) => {
     try {
       // Check if we need to auto-deduct inventory
       // Condition: status transitions to CONFIRMED or PREPARING and is_inventory_deducted === 0
-      const shouldDeduct = (status === 'CONFIRMED' || status === 'PREPARING') && order.is_inventory_deducted === 0;
+      const shouldDeduct = status !== 'CANCELLED' && order.is_inventory_deducted === 0;
 
       if (shouldDeduct) {
         // Query all order items
@@ -342,6 +342,11 @@ export const updateOrderStatus = (req: AuthRequest, res: Response) => {
 
         // Mark order inventory as deducted
         db.prepare('UPDATE orders SET is_inventory_deducted = 1 WHERE id = ?').run(order.id);
+      }
+
+      // Đơn tiền mặt hoàn thành nghĩa là đã thu tiền
+      if (status === 'COMPLETED') {
+        db.prepare("UPDATE orders SET payment_status = 'PAID' WHERE id = ? AND payment_method = 'COD'").run(order.id);
       }
 
       // Hủy đơn đã trừ kho -> hoàn kho
